@@ -2,6 +2,20 @@
 
 AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. EAAP-003 adds local password login, short-lived RS256 tokens, current tenant-membership authorization, and offline owner bootstrap. The APIs expose process-health and protected tenant-context endpoints; the frontend shows static **Not connected** statuses. Tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agents, workflows, LLM calls, retrieval, Tool Gateway, billing, and deployment are not implemented.
 
+## Run the complete local project
+
+With Docker Engine and Docker Compose installed, run from the repository root:
+
+```sh
+./dev.sh up
+```
+
+This prepares an ignored, owner-readable `.env`, filling missing or blank database passwords with random distinct values, starts PostgreSQL, builds Java, provisions the dedicated database roles, applies Flyway migrations in a temporary offline container, and starts all four services. Existing nonempty `.env` values and database data are preserved. On subsequent runs, operator provisioning synchronizes dedicated role passwords with `.env`; the regular HTTP service still receives only runtime credentials and never performs migrations. Run the script only against this project's dedicated local development database.
+
+Database connection settings live in `.env`: `DB_HOST=postgres`, `DB_PORT=5432`, `POSTGRES_DB=eaap_dev`, and `DB_PASSWORD` for the fixed `eaap_runtime` role. PostgreSQL runs as a service in the same Compose project with persistent storage and no host port. The other three passwords serve separate provisioning, migration and identity-operator boundaries.
+
+Open the frontend at http://127.0.0.1:4173 and Java health at http://127.0.0.1:8080/actuator/health. Use `./dev.sh logs` for bounded logs and `./dev.sh down` to stop while preserving database data. `./dev.sh init` only prepares `.env`. Signing keys and an initial owner are configured separately through [authentication operations](docs/engineering/authentication-operations.md); login remains disabled until signing keys are supplied.
+
 ## Stack and structure
 
 - Java 21, Spring Boot 3.5.16, Maven 3.9.11 via Maven Wrapper 3.3.4.

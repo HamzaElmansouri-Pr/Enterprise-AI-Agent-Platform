@@ -1,0 +1,6 @@
+# One-shot offline migration override used by dev.sh; adds no services.
+services:
+  control-plane:
+    environment:
+      MIGRATION_DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?Set the migration password in .env}
+    command: ["--spring.profiles.active=migration"]

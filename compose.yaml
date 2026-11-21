@@ -8,7 +8,7 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eaap_dev}
+      DB_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${POSTGRES_DB:-eaap_dev}
       DB_PASSWORD: ${DB_PASSWORD:?Set a unique local runtime password in .env}
     mem_limit: 768m
     cpus: 1.0

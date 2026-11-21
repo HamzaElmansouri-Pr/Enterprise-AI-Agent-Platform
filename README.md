@@ -4,7 +4,17 @@ AI agent orchestration and management platform. EAAP-001 establishes development
 
 ## Run the complete local project
 
-With Docker Engine and Docker Compose installed, run from the repository root:
+With Docker Engine, the modern Compose plugin, and Buildx installed, verify:
+
+```sh
+docker info
+docker compose version
+docker buildx version
+```
+
+Legacy `docker-compose` v1 does not support this workflow. If `docker compose` or `docker buildx` is missing, follow Docker's [Compose plugin installation](https://docs.docker.com/compose/install/linux/) and [Buildx installation](https://github.com/docker/buildx#installing) instructions. User-local Linux plugin binaries belong in `~/.docker/cli-plugins/`, must be executable, and should be verified against release checksums. Manual installations require explicit updates.
+
+Then run from the repository root:
 
 ```sh
 ./dev.sh up

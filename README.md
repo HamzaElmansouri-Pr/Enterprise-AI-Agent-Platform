@@ -1,6 +1,6 @@
 # Enterprise AI Agent Platform
 
-AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. EAAP-003 adds local password login, short-lived RS256 tokens, current tenant-membership authorization, and offline owner bootstrap. The APIs expose process-health and protected tenant-context endpoints; the frontend shows static **Not connected** statuses. Tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agents, workflows, LLM calls, retrieval, Tool Gateway, billing, and deployment are not implemented.
+AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. EAAP-003 adds local password login, short-lived RS256 tokens, current tenant-membership authorization, and offline owner bootstrap. EAAP-004 adds tenant-owned agent configuration creation, listing, retrieval, updates and archival; see [ADR 0003](docs/architecture/decisions/0003-agent-configuration-domain.md) for API contracts and [validation evidence](docs/tasks/EAAP-004.md). The APIs expose process-health, protected tenant-context and agent configuration endpoints; the frontend shows static **Not connected** statuses. Tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agent execution, workflows, LLM calls, retrieval, Tool Gateway, billing, and deployment are not implemented.
 
 ## Run the complete local project
 
@@ -83,7 +83,7 @@ The Java server uses port 8080 (`PORT` overrides it). Python defaults to product
 | Frontend dev server | `http://127.0.0.1:5173` | Minimal platform screen |
 | Frontend Compose preview | `http://127.0.0.1:4173` | Built minimal platform screen |
 
-Spring permits anonymous `GET /actuator/health` and JSON `POST /api/v1/auth/login`; tenant context requires a valid bearer and live membership. Unspecified paths remain denied. See [authentication operations](docs/engineering/authentication-operations.md). Security filters and CSRF protection remain enabled, no development user is generated, and health details/other Actuator endpoints are not exposed.
+Spring permits anonymous `GET /actuator/health` and JSON `POST /api/v1/auth/login`; tenant context and agent configuration routes require a valid bearer and live membership. OWNER/ADMIN manage agent configurations; MEMBER has read access. Unspecified paths remain denied. See [authentication operations](docs/engineering/authentication-operations.md). Security filters and CSRF protection remain enabled, no development user is generated, and health details/other Actuator endpoints are not exposed.
 
 ## Environment configuration
 
@@ -137,6 +137,6 @@ npm test
 npm run build
 ```
 
-Java `verify` requires Docker: it covers HTTP security/liveness with an unavailable database, then login/JWT/membership/bootstrap and Flyway/schema/role/RLS behavior using a disposable Testcontainers PostgreSQL instance. No development data is used. The migration and isolation design is recorded in [ADR 0001](docs/architecture/decisions/0001-postgresql-tenant-isolation.md). Python tests cover response/schema, hidden docs, safe settings, and lack of permissive CORS. The Vitest smoke test renders the actual React screen and checks its identity and disconnected service statuses without adding a browser-test library.
+Java `verify` requires Docker: it covers HTTP security/liveness with an unavailable database, then agent configuration/lifecycle/concurrency, login/JWT/membership/bootstrap and Flyway/schema/role/RLS behavior using a disposable Testcontainers PostgreSQL instance. No development data is used. The migration and isolation design is recorded in [ADR 0001](docs/architecture/decisions/0001-postgresql-tenant-isolation.md). Python tests cover response/schema, hidden docs, safe settings, and lack of permissive CORS. The Vitest smoke test renders the actual React screen and checks its identity and disconnected service statuses without adding a browser-test library.
 
 GitHub Actions runs these components independently with read-only repository permissions, immutable action SHAs, and no deployment or paid API calls. See [EAAP-001 evidence](docs/tasks/EAAP-001.md) and [EAAP-002 evidence](docs/tasks/EAAP-002.md) for executed checks and limitations; a workflow definition alone is not evidence of passing CI.

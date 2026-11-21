@@ -6,7 +6,7 @@ Follow [ADR 0001](../architecture/decisions/0001-postgresql-tenant-isolation.md)
 
 Copy root `.env.example` to ignored `.env`. Set four different unique local passwords: `POSTGRES_PASSWORD` for bootstrap, `MIGRATION_DB_PASSWORD` for schema migration, `DB_PASSWORD` for runtime, and `IDENTITY_OPERATOR_DB_PASSWORD` for the offline identity operator. These are development credentials only, not production defaults. Do not commit `.env`, echo credentials, pass literal secrets in command arguments, or enable shell tracing around provisioning.
 
-The PostgreSQL entrypoint runs the mounted bootstrap script on an empty data volume. It creates the migration/runtime/identity-operator roles, revokes public database/schema access, and creates the migration-owned `platform` schema. Passwords are read from the environment by psql; password-bearing statements are not echoed and statement/error-statement logging is disabled only in the administrator's provisioning session. Errors still fail the script and transaction. Application logs and normal runtime sessions do not inherit those session settings. The new offline identity-operator role separately suppresses statement/parameter and failed-row detail logging to protect password hashes; see [authentication operations](authentication-operations.md).
+The PostgreSQL entrypoint runs the mounted bootstrap script on an empty data volume. It creates the migration/runtime/identity-operator roles, revokes public database/schema access, and creates the migration-owned `platform` schema. Passwords are read from the environment by psql; password-bearing statements are not echoed and statement/error-statement logging is disabled only in the administrator's provisioning session. Errors still fail the script and transaction. Application logs do not inherit those session settings. Both runtime and offline identity-operator roles separately suppress statement/parameter and failed-row detail logging to protect agent instructions and password hashes; see [authentication operations](authentication-operations.md).
 
 ```sh
 docker compose config --quiet
@@ -14,7 +14,7 @@ docker compose up -d --wait postgres
 docker compose build control-plane
 ```
 
-For a volume initialized by EAAP-001, PostgreSQL does not rerun initialization scripts. After reviewing the existing database and backing up data, explicitly provision the new dedicated roles using:
+PostgreSQL does not rerun initialization scripts on existing volumes. EAAP-001 volumes need role provisioning; existing EAAP-002/003 volumes also need reviewed reprovisioning before V3 to apply the new runtime logging defaults protecting agent instructions. New database sessions inherit the defaults, so recreate the control-plane service after provisioning. After reviewing the existing database and backing up data, explicitly provision the new dedicated roles using:
 
 ```sh
 docker compose exec -T postgres sh /docker-entrypoint-initdb.d/10-platform-roles.sh
@@ -47,7 +47,7 @@ Bootstrap and migration are separate failure boundaries. A failed fresh-volume b
 
 ## Runtime context and timeouts
 
-The internal JDBC helper requires a non-null authorized UUID and an explicit transaction. Application use cases must obtain tenant identity from trusted authentication/authorization, set the local context on the transaction's own connection before data access, then commit/roll back. EAAP-003 implements authenticated membership resolution and this sequence; see [authentication operations](authentication-operations.md) and [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md). See the ADR for the runtime-credential compromise limitation and why Java filtering alone is insufficient.
+The internal JDBC helper requires a non-null authorized UUID and an explicit transaction. Application use cases must obtain tenant identity from trusted authentication/authorization, set the local context on the transaction's own connection before data access, then commit/roll back. EAAP-003 implements authenticated membership resolution and this sequence; EAAP-004 shares its typed authorized-tenant transaction boundary between context reads and agent operations ([ADR 0003](../architecture/decisions/0003-agent-configuration-domain.md)); see [authentication operations](authentication-operations.md) and [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md). See the ADR for the runtime-credential compromise limitation and why Java filtering alone is insufficient.
 
 Runtime pool: maximum 4, minimum idle 0, connection acquisition 2 seconds, validation 1 second, idle timeout 60 seconds, maximum lifetime 10 minutes, no startup connection requirement. Driver connect timeout is 3 seconds and socket timeout is 5 seconds. Server statement timeout is 3 seconds, lock timeout 1 second, and idle-in-transaction timeout 10 seconds. The context statement explicitly uses a 3-second query timeout. These local bounds must be reassessed for real workloads; they are not invented performance benchmarks.
 

@@ -2,6 +2,10 @@
 
 Tasks require architect-approved scope and acceptance criteria. Engineers implement approved work and report evidence following [AGENTS.md](../../AGENTS.md) and the [Git workflow](../engineering/git-workflow.md). Human architect acceptance is separate from an engineering delivery report.
 
+## EAAP-004 — Tenant-owned agent configuration
+
+EAAP-000 through EAAP-003 are accepted. See [implementation and validation evidence](EAAP-004.md) and [ADR 0003](../architecture/decisions/0003-agent-configuration-domain.md). Engineering delivery is pending independent architectural review; no agent execution is included.
+
 ## EAAP-003 — Secure authentication, authorization and tenant membership
 
 EAAP-000 through EAAP-002 are accepted. See [implementation and validation notes](EAAP-003.md), [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md), and [authentication operations](../engineering/authentication-operations.md). Human architect review remains required.

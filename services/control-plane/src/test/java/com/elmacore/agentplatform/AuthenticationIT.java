@@ -3,6 +3,7 @@ package com.elmacore.agentplatform;
 import com.elmacore.agentplatform.identity.api.LoginProtection;
 import com.elmacore.agentplatform.identity.domain.Email;
 import com.elmacore.agentplatform.identity.infrastructure.*;
+import com.elmacore.agentplatform.identity.application.MembershipAuthorization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
@@ -76,9 +77,9 @@ class AuthenticationIT {
         // Explicit upgrade from the accepted V1 state, preserving its checksum/history.
         var latest = Flyway.configure().dataSource(DB.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(2);
         latest.validate();
-        assertThat(latest.info().applied()).hasSize(2);
+        assertThat(latest.info().applied()).hasSize(3);
         registry.add("spring.datasource.url", DB::getJdbcUrl);
         registry.add("spring.datasource.password", () -> RUNTIME);
         registry.add("spring.datasource.hikari.maximum-pool-size", () -> "1");
@@ -235,7 +236,8 @@ class AuthenticationIT {
                         });
             }
         };
-        assertThat(new JdbcTenantRegistry(wrapped).readAuthorized(A)).isTrue();
+        var authorized = new MembershipAuthorization(new JdbcIdentityStore(new JdbcTemplate(source))).authorize(USER, A);
+        assertThat(new JdbcTenantRegistry(wrapped).readAuthorized(authorized)).isTrue();
         assertThat(events).hasSize(2);
         assertThat(events.get(0).substring(8)).isEqualTo(events.get(1).substring(5));
         // Raise a real PostgreSQL error after applying context; TransactionTemplate must roll back.
@@ -244,7 +246,7 @@ class AuthenticationIT {
             statement.execute("GRANT EXECUTE ON FUNCTION platform.test_rls_error() TO eaap_runtime");
             statement.execute("CREATE POLICY test_registry_error ON platform.tenants AS RESTRICTIVE FOR SELECT TO eaap_runtime USING(platform.test_rls_error())");
             try {
-                assertThrows(org.springframework.dao.DataAccessException.class, () -> new JdbcTenantRegistry(source).readAuthorized(A));
+                assertThrows(org.springframework.dao.DataAccessException.class, () -> new JdbcTenantRegistry(source).readAuthorized(authorized));
                 context(A, tokens.issue(USER)).andExpect(status().isInternalServerError())
                         .andExpect(content().json("{\"code\":\"internal_error\"}"));
             } finally {

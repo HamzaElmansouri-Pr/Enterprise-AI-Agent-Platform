@@ -1,0 +1,6 @@
+# Offline owner bootstrap only: operator credentials never enter the HTTP service.
+services:
+  control-plane:
+    environment:
+      IDENTITY_OPERATOR_DB_PASSWORD: ${IDENTITY_OPERATOR_DB_PASSWORD:?Set the operator password in .env}
+    command: ["--spring.profiles.active=identity-bootstrap"]

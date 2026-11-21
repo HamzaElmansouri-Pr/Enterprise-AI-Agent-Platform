@@ -95,6 +95,11 @@ case "${1:-up}" in
         compose up -d --build --wait
         compose ps
         ;;
+    bootstrap)
+        require_compose
+        init_env
+        "$PROJECT_DIR/bootstrap-owner.sh"
+        ;;
     down)
         require_compose
         compose down
@@ -104,7 +109,7 @@ case "${1:-up}" in
         compose logs --tail=100
         ;;
     *)
-        echo 'Usage: ./dev.sh [up|init|down|logs]' >&2
+        echo 'Usage: ./dev.sh [up|init|bootstrap|down|logs]' >&2
         exit 2
         ;;
 esac

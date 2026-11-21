@@ -48,6 +48,14 @@ The bind mount is read-only and not copied into images; frontend/Python receive 
 
 ## Initial tenant and owner
 
+For local development, with PostgreSQL started and migrations applied by `./dev.sh up`, run this command directly in an interactive terminal:
+
+```sh
+./dev.sh bootstrap
+```
+
+It asks for email, tenant name, password and confirmation. Password input is hidden, length/nonblank validation happens before Docker starts, and operator database credentials are read from `.env` through an offline-only Compose override. The password is not written to a file or placed in command arguments. This helper requires Bash and Linux UUID generation. Optional exported `BOOTSTRAP_TENANT_ID`/`BOOTSTRAP_USER_ID` are retained; otherwise new IDs are generated and printed after success. Save those IDs for repeat execution, which must use the same IDs/email/name to match existing records. Do not rerun with new IDs for an existing account. Input failures identify the field/constraint without echoing its value; database errors remain sanitized. The following explicit environment-based process remains supported for operators.
+
 Select stable tenant/user UUIDs and a nonblank tenant name of at most 200 characters. Supply all five BOOTSTRAP inputs from the operator's protected environment: BOOTSTRAP_TENANT_ID, BOOTSTRAP_TENANT_NAME, BOOTSTRAP_USER_ID, BOOTSTRAP_EMAIL, BOOTSTRAP_PASSWORD, plus IDENTITY_OPERATOR_DB_PASSWORD. Password must be nonblank and 16–128 characters; no value is defaulted. Email uses the same normalization/validation as login. Never provide password literals on the CLI.
 
 ```sh

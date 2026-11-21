@@ -24,7 +24,7 @@ This prepares an ignored, owner-readable `.env`, filling missing or blank databa
 
 Database connection settings live in `.env`: `DB_HOST=postgres`, `DB_PORT=5432`, `POSTGRES_DB=eaap_dev`, and `DB_PASSWORD` for the fixed `eaap_runtime` role. PostgreSQL runs as a service in the same Compose project with persistent storage and no host port. The other three passwords serve separate provisioning, migration and identity-operator boundaries.
 
-Open the frontend at http://127.0.0.1:4173 and Java health at http://127.0.0.1:8080/actuator/health. Use `./dev.sh logs` for bounded logs and `./dev.sh down` to stop while preserving database data. `./dev.sh init` only prepares `.env`. Signing keys and an initial owner are configured separately through [authentication operations](docs/engineering/authentication-operations.md); login remains disabled until signing keys are supplied.
+Open the frontend at http://127.0.0.1:4173 and Java health at http://127.0.0.1:8080/actuator/health. Use `./dev.sh logs` for bounded logs and `./dev.sh down` to stop while preserving database data. `./dev.sh init` only prepares `.env`. After startup, `./dev.sh bootstrap` interactively creates the first tenant/owner using a hidden password prompt and the offline operator profile. Signing keys and an initial owner are configured separately through [authentication operations](docs/engineering/authentication-operations.md); login remains disabled until signing keys are supplied.
 
 ## Stack and structure
 

@@ -1,0 +1,21 @@
+from fastapi import FastAPI
+
+from agent_runtime.api.health import router
+from agent_runtime.config import Settings
+
+
+def create_app() -> FastAPI:
+    settings = Settings.from_environment()
+    app = FastAPI(
+        title="Agent Runtime",
+        debug=False,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
+    app.state.settings = settings
+    app.include_router(router)
+    return app
+
+
+app = create_app()

@@ -1,1 +1,28 @@
-AGENTS.md
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Java
+**/target/
+
+# Python
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+*.py[cod]
+*.egg-info/
+
+# Frontend
+**/node_modules/
+**/dist/
+*.tsbuildinfo
+coverage/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+*.log

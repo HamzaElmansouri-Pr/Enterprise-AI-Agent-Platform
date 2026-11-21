@@ -73,6 +73,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/docker/postgres/bootstrap.sh:/docker-entrypoint-initdb.d/10-platform-roles.sh:ro
       - ./infrastructure/docker/postgres/bootstrap.sql:/opt/eaap/bootstrap.sql:ro
+      - ./infrastructure/docker/postgres/knowledge-extension.sql:/opt/eaap/knowledge-extension.sql:ro
     shm_size: 128m
     mem_limit: 512m
     cpus: 1.0

@@ -30,3 +30,7 @@ coverage/
 # Runtime signing material; keep outside build contexts.
 *.pem
 *.key
+
+# Local embedding artifacts belong outside the repository and build context.
+*.onnx
+.model-cache/

@@ -1,0 +1,19 @@
+# Opt-in knowledge ingestion. Model setup and privileged extension provisioning precede V4.
+services:
+  control-plane:
+    environment:
+      KNOWLEDGE_WORKER_ENABLED: 'true'
+      EMBEDDING_URL: http://agent-runtime:8000
+      EMBEDDING_SECRET: ${EMBEDDING_SECRET:?Set a random internal secret of at least 32 characters}
+  agent-runtime:
+    ports: !reset []
+    mem_limit: 1536m
+    environment:
+      EMBEDDING_SECRET: ${EMBEDDING_SECRET:?Set a random internal secret of at least 32 characters}
+      EMBEDDING_MODEL_DIR: /models/e5-small
+      HF_HUB_OFFLINE: '1'
+    volumes:
+      - type: bind
+        source: ${EMBEDDING_MODEL_DIR:?Set an absolute prepared model directory outside the repository}
+        target: /models/e5-small
+        read_only: true

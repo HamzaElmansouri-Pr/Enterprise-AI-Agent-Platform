@@ -2,6 +2,10 @@
 
 Tasks require architect-approved scope and acceptance criteria. Engineers implement approved work and report evidence following [AGENTS.md](../../AGENTS.md) and the [Git workflow](../engineering/git-workflow.md). Human architect acceptance is separate from an engineering delivery report.
 
+## EAAP-005 — Secure knowledge ingestion and semantic retrieval
+
+EAAP-000 through EAAP-004 are accepted. See [implementation and validation evidence](EAAP-005.md), [ADR 0004](../architecture/decisions/0004-knowledge-ingestion-and-retrieval.md), and [local setup](../engineering/knowledge-operations.md). Pending independent architectural review; no generated answers or agent execution.
+
 ## EAAP-004 — Tenant-owned agent configuration
 
 EAAP-000 through EAAP-003 are accepted. See [implementation and validation evidence](EAAP-004.md) and [ADR 0003](../architecture/decisions/0003-agent-configuration-domain.md). Engineering delivery is pending independent architectural review; no agent execution is included.

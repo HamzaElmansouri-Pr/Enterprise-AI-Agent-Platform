@@ -45,6 +45,7 @@ class PersistenceIsolationIT {
             .withEnv("MIGRATION_DB_PASSWORD", MIGRATION_PASSWORD)
             .withEnv("DB_PASSWORD", RUNTIME_PASSWORD)
             .withEnv("IDENTITY_OPERATOR_DB_PASSWORD", UUID.randomUUID().toString())
+            .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/knowledge-extension.sql"), "/docker-entrypoint-initdb.d/20-knowledge-extension.sql")
             .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sh"),
                     "/docker-entrypoint-initdb.d/10-platform-roles.sh")
             .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sql"),
@@ -59,7 +60,7 @@ class PersistenceIsolationIT {
                 .dataSource(POSTGRES.getJdbcUrl(), "eaap_migration", MIGRATION_PASSWORD)
                 .schemas("platform").defaultSchema("platform").createSchemas(false)
                 .cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
 
         // Administrator only seeds deterministic fixtures; tenant access tests always use runtime.
         try (var admin = admin(); var statement = admin.createStatement()) {
@@ -106,7 +107,7 @@ class PersistenceIsolationIT {
     void migrationHistoryRemainsValidAndRepeatedMigrationIsANoOp() {
         flyway.validate();
         assertThat(flyway.migrate().migrationsExecuted).isZero();
-        assertThat(flyway.info().applied()).hasSize(3);
+        assertThat(flyway.info().applied()).hasSize(4);
         try (var context = new SpringApplicationBuilder(ControlPlaneApplication.class)
                 .profiles("migration")
                 .initializers(application -> application.getEnvironment().getPropertySources().addFirst(
@@ -116,7 +117,7 @@ class PersistenceIsolationIT {
                 .run()) {
             assertThat(context).isNotInstanceOf(WebServerApplicationContext.class);
             assertThat(context.containsBean("entityManagerFactory")).isFalse();
-            assertThat(context.getBean(Flyway.class).info().applied()).hasSize(3);
+            assertThat(context.getBean(Flyway.class).info().applied()).hasSize(4);
             assertThat(context.getBean(HikariDataSource.class).getUsername()).isEqualTo("eaap_migration");
         }
     }

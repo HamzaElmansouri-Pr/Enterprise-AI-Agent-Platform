@@ -21,6 +21,8 @@ Result: **113 Java tests passed**, zero failures/errors/skips: 35 unit/security 
 
 Tests cover fresh V1–V3 and V2→V3 migration/validation, strict payloads/Unicode/limits, all roles, forged claims/headers, removed membership/disabled identity, tenant-local 404s, exact routes/CSRF, size+1 deterministic pagination/no COUNT, RLS without a Java tenant filter, runtime privilege denials, same physical connection context, rollback/pool/HTTP context cleanup, and sanitized errors/logs. Three latch-controlled races verify update versus archive in both orders and concurrent repeat archive. Test-only keys/passwords/databases are generated independently of development credentials.
 
+Follow-up lifecycle verification: `./mvnw -B -ntp -Dit.test=AgentConfigurationIT verify` passed all 35 unit/security tests and 36 agent integration cases. The OWNER/ADMIN lifecycle cases additionally assert editable field values and use fresh GET requests after update, archive, and rejected archived update to prove persisted representations remain correct. This verification used disposable PostgreSQL only and did not create or archive development-tenant data.
+
 ```sh
 cd services/agent-runtime
 uv run --locked ruff check .

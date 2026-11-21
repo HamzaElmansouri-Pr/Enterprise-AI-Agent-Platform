@@ -1,4 +1,10 @@
 spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-trailing-tokens: true
+    parser:
+      strict-duplicate-detection: true
   application:
     name: control-plane
   datasource:

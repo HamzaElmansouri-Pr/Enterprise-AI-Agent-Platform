@@ -1,0 +1,14 @@
+# Opt-in development signing keys. Merge with compose.yaml; adds no services.
+services:
+  control-plane:
+    environment:
+      AUTH_PRIVATE_KEY: file:/run/eaap-keys/private.pem
+      AUTH_PUBLIC_KEY: file:/run/eaap-keys/public.pem
+      AUTH_ISSUER: ${AUTH_ISSUER:?Set the expected issuer}
+      AUTH_AUDIENCE: ${AUTH_AUDIENCE:?Set the expected API audience}
+      AUTH_KEY_ID: ${AUTH_KEY_ID:?Set a non-secret key identifier}
+    volumes:
+      - type: bind
+        source: ${AUTH_KEYS_DIR:?Set an absolute directory outside the repository}
+        target: /run/eaap-keys
+        read_only: true

@@ -1,6 +1,6 @@
 # Architecture foundation
 
-Status: logical baseline documented by accepted EAAP-000, scaffolding by accepted EAAP-001, and persistence/isolation foundation specified by EAAP-002. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
+Status: EAAP-000 logical baseline, EAAP-001 scaffolding, and EAAP-002 persistence/isolation are accepted. EAAP-003 adds the assigned authentication/membership foundation, pending independent review. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
 
 The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules cover [coding](../engineering/coding-standards.md), [security](../engineering/security-standards.md), [testing](../engineering/testing-strategy.md), and [Git workflow](../engineering/git-workflow.md). See the [task register](../tasks/README.md) for the repository audit.
 
@@ -42,7 +42,7 @@ Frontend features separate components, hooks, API clients, models, validation, a
 
 - Versions and tooling for future dependencies; EAAP-001 resolves the initial scaffolding versions and build/package tooling only.
 - Concrete business modules, API contracts, and compatibility expectations.
-- Authentication approach, tenant identity propagation, authorization model, and approval lifecycle.
+- Future identity lifecycle, external OIDC integration and approval lifecycle; EAAP-003 resolves initial local authentication and tenant membership in [ADR 0002](decisions/0002-authentication-and-tenant-authorization.md).
 - Future business schemas and access patterns; tenant lifecycle rules and privileged discovery/administration. EAAP-002 resolves the initial identity schema, database roles, transaction-local context, and RLS mechanism only.
 - Retrieval and ingestion placement, access contracts, and background execution mechanism.
 - Hosted model provider selection and provider contract; operational budgets and timeouts.
@@ -52,4 +52,4 @@ These are decision requests, not approved choices. They do not block this docume
 
 ## Architecture decision records
 
-The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-isolation.md), recording the database isolation approach approved by EAAP-002 and the implementation choices awaiting independent review. No speculative authentication or tenant lifecycle decisions are presented as approved.
+The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-isolation.md), recording the database isolation approach approved by EAAP-002 and the implementation choices awaiting independent review. See also [ADR 0002](decisions/0002-authentication-and-tenant-authorization.md) for the EAAP-003 authentication and membership boundary. Future tenant lifecycle decisions remain open.

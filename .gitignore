@@ -26,3 +26,7 @@ coverage/
 .vscode/
 .DS_Store
 *.log
+
+# Runtime signing material; keep outside build contexts.
+*.pem
+*.key

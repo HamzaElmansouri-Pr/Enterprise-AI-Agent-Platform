@@ -4,9 +4,9 @@ Follow [ADR 0001](../architecture/decisions/0001-postgresql-tenant-isolation.md)
 
 ## Local provisioning
 
-Copy root `.env.example` to ignored `.env`. Set three different unique local passwords: `POSTGRES_PASSWORD` for bootstrap, `MIGRATION_DB_PASSWORD` for schema migration, and `DB_PASSWORD` for runtime. These are development credentials only, not production defaults. Do not commit `.env`, echo credentials, pass literal secrets in command arguments, or enable shell tracing around provisioning.
+Copy root `.env.example` to ignored `.env`. Set four different unique local passwords: `POSTGRES_PASSWORD` for bootstrap, `MIGRATION_DB_PASSWORD` for schema migration, `DB_PASSWORD` for runtime, and `IDENTITY_OPERATOR_DB_PASSWORD` for the offline identity operator. These are development credentials only, not production defaults. Do not commit `.env`, echo credentials, pass literal secrets in command arguments, or enable shell tracing around provisioning.
 
-The PostgreSQL entrypoint runs the mounted bootstrap script on an empty data volume. It creates the migration/runtime roles, revokes public database/schema access, and creates the migration-owned `platform` schema. Passwords are read from the environment by psql; password-bearing statements are not echoed and statement/error-statement logging is disabled only in the administrator's provisioning session. Errors still fail the script and transaction. Application logs and normal database sessions do not inherit those logging settings.
+The PostgreSQL entrypoint runs the mounted bootstrap script on an empty data volume. It creates the migration/runtime/identity-operator roles, revokes public database/schema access, and creates the migration-owned `platform` schema. Passwords are read from the environment by psql; password-bearing statements are not echoed and statement/error-statement logging is disabled only in the administrator's provisioning session. Errors still fail the script and transaction. Application logs and normal runtime sessions do not inherit those session settings. The new offline identity-operator role separately suppresses statement/parameter and failed-row detail logging to protect password hashes; see [authentication operations](authentication-operations.md).
 
 ```sh
 docker compose config --quiet
@@ -47,7 +47,7 @@ Bootstrap and migration are separate failure boundaries. A failed fresh-volume b
 
 ## Runtime context and timeouts
 
-The internal JDBC helper requires a non-null authorized UUID and an explicit transaction. Application use cases must eventually obtain tenant identity from trusted authentication/authorization, set the local context on the transaction's own connection before data access, then commit/roll back. No public tenant selector or authenticated flow exists in this task. See the ADR for the runtime-credential compromise limitation and why Java filtering alone is insufficient.
+The internal JDBC helper requires a non-null authorized UUID and an explicit transaction. Application use cases must obtain tenant identity from trusted authentication/authorization, set the local context on the transaction's own connection before data access, then commit/roll back. EAAP-003 implements authenticated membership resolution and this sequence; see [authentication operations](authentication-operations.md) and [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md). See the ADR for the runtime-credential compromise limitation and why Java filtering alone is insufficient.
 
 Runtime pool: maximum 4, minimum idle 0, connection acquisition 2 seconds, validation 1 second, idle timeout 60 seconds, maximum lifetime 10 minutes, no startup connection requirement. Driver connect timeout is 3 seconds and socket timeout is 5 seconds. Server statement timeout is 3 seconds, lock timeout 1 second, and idle-in-transaction timeout 10 seconds. The context statement explicitly uses a 3-second query timeout. These local bounds must be reassessed for real workloads; they are not invented performance benchmarks.
 

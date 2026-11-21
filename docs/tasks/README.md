@@ -2,6 +2,10 @@
 
 Tasks require architect-approved scope and acceptance criteria. Engineers implement approved work and report evidence following [AGENTS.md](../../AGENTS.md) and the [Git workflow](../engineering/git-workflow.md). Human architect acceptance is separate from an engineering delivery report.
 
+## EAAP-003 — Secure authentication, authorization and tenant membership
+
+EAAP-000 through EAAP-002 are accepted. See [implementation and validation notes](EAAP-003.md), [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md), and [authentication operations](../engineering/authentication-operations.md). Human architect review remains required.
+
 ## EAAP-002 — PostgreSQL persistence and tenant isolation foundation
 
 See [implementation and validation notes](EAAP-002.md), [ADR 0001](../architecture/decisions/0001-postgresql-tenant-isolation.md), and [database operations](../engineering/database-operations.md). The architect accepted EAAP-000 and EAAP-001 before assigning this task. Initial database role separation, schema migration, and transaction-local RLS are in scope; authentication, tenant lifecycle/administration, business APIs, and AI features remain outside it.

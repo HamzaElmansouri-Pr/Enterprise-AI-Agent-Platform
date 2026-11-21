@@ -117,12 +117,17 @@ class AgentConfigurationIT {
         assertThat(updated.get("tenantId")).isEqualTo(original.get("tenantId"));
         assertThat(updated.get("createdAt")).isEqualTo(original.get("createdAt"));
         assertThat(Instant.parse(updated.get("updatedAt").asText())).isAfter(Instant.parse(original.get("updatedAt").asText()));
+        assertThat(updated.get("name").asText()).isEqualTo("Changed");
+        assertThat(updated.get("systemInstructions").asText()).isEqualTo("Changed\ninstructions");
+        assertThat(json(getAgent(A, id, user).andExpect(status().isOk()))).isEqualTo(updated);
         var archived = json(archive(A, id, user).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ARCHIVED")));
+        assertThat(json(getAgent(A, id, user).andExpect(status().isOk()))).isEqualTo(archived);
         AgentSqlProbe.EVENTS.clear();
         assertThat(json(archive(A, id, user).andExpect(status().isOk()))).isEqualTo(archived);
         assertThat(AgentSqlProbe.agents()).noneMatch(event -> event.sql().stripLeading().startsWith("UPDATE"));
         update(A, id, user, payload("Forbidden", "Content")).andExpect(status().isConflict())
                 .andExpect(content().json("{\"code\":\"agent_archived\"}"));
+        assertThat(json(getAgent(A, id, user).andExpect(status().isOk()))).isEqualTo(archived);
     }
     @Test void membersHaveReadOnlyAccessAndCallerRolesAreIgnored() throws Exception {
         getAgent(A, AGENT_A, MEMBER).andExpect(status().isOk());

@@ -1,5 +1,6 @@
 package com.elmacore.agentplatform;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -9,16 +10,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.datasource.url=jdbc:postgresql://127.0.0.1:1/unavailable")
 @AutoConfigureMockMvc
 class HealthSecurityTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private HikariDataSource dataSource;
 
     @Test
     void anonymousHealthExposesOnlyStatus() throws Exception {
@@ -37,5 +43,13 @@ class HealthSecurityTest {
     @Test
     void healthDoesNotAllowStateChangingRequests() throws Exception {
         mockMvc.perform(post("/actuator/health")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void healthWorksWithoutDatabaseAndDoesNotOpenPoolConnections() throws Exception {
+        mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
+        if (dataSource.getHikariPoolMXBean() != null) {
+            assertThat(dataSource.getHikariPoolMXBean().getTotalConnections()).isZero();
+        }
     }
 }

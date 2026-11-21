@@ -1,6 +1,6 @@
 # Enterprise AI Agent Platform
 
-AI agent orchestration and management platform. EAAP-001 establishes development scaffolding only. The control plane and runtime expose process-health endpoints; the frontend shows static **Not connected** statuses. API connectivity, authentication, tenants, agents, workflows, LLM calls, retrieval, database entities, migrations, Tool Gateway, billing, and deployment are not implemented.
+AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. The APIs expose process-health endpoints; the frontend shows static **Not connected** statuses. Authentication, tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agents, workflows, LLM calls, retrieval, Tool Gateway, billing, and deployment are not implemented.
 
 ## Stack and structure
 
@@ -21,7 +21,7 @@ docs/tasks/                   Task inventory and delivery evidence
 compose.yaml                  Four-service development environment
 ```
 
-Follow [AGENTS.md](AGENTS.md), the [architecture foundation](docs/architecture/README.md), and [EAAP-001 notes](docs/tasks/EAAP-001.md). Exact direct dependencies are pinned in `pom.xml` and `pyproject.toml`/`package.json`; Python and npm transitive resolutions are committed in `uv.lock` and `package-lock.json`. Java dependencies/plugins use Spring Boot's pinned parent management; Maven has no native npm-style lockfile.
+Follow [AGENTS.md](AGENTS.md), the [architecture foundation](docs/architecture/README.md), [EAAP-001 notes](docs/tasks/EAAP-001.md), and [database operations](docs/engineering/database-operations.md). Exact direct dependencies are pinned in `pom.xml` and `pyproject.toml`/`package.json`; Python and npm transitive resolutions are committed in `uv.lock` and `package-lock.json`. Java dependencies/plugins use Spring Boot's pinned parent management, including JPA, Flyway 11.7.2, PostgreSQL JDBC 42.7.11, and Testcontainers 1.21.4; Maven has no native npm-style lockfile.
 
 ## Prerequisites
 
@@ -63,9 +63,9 @@ Spring permits only anonymous `GET /actuator/health`; other paths return 403. Se
 
 ## Environment configuration
 
-Copy `.env.example` to the ignored root `.env` and set a unique **local development** `POSTGRES_PASSWORD` before running Compose. The example intentionally has no password. Do not commit `.env` or use these development database settings in production. Compose passes the password only to PostgreSQL, not application builds or containers.
+Copy `.env.example` to the ignored root `.env` and set three different unique **local development** passwords: `POSTGRES_PASSWORD`, `MIGRATION_DB_PASSWORD`, and `DB_PASSWORD`. The example intentionally has no passwords. Do not commit `.env` or use these development settings in production. The regular control plane receives only `DB_PASSWORD`; bootstrap/migration credentials are never embedded in application images. Python/frontend receive no database credentials.
 
-`POSTGRES_USER` and `POSTGRES_DB` default to `eaap_dev`. This is a local database bootstrap account, not a production application role. Neither application has database access code or connection settings. `APP_ENV` configures the Python environment label. Host commands read process environment; they do not automatically load the root `.env`.
+`POSTGRES_USER` and `POSTGRES_DB` default to `eaap_dev`. This is the local database bootstrap account; ordinary Java runtime uses `eaap_runtime` and one-shot migrations use `eaap_migration`. `DB_URL` configures the host Java JDBC URL (Compose supplies its internal PostgreSQL DNS address). Hibernate cannot create schemas, Flyway is disabled during normal startup, and the connection pool has a zero idle minimum. `APP_ENV` configures the Python environment label. Host commands read process environment; they do not automatically load the root `.env`.
 
 `VITE_CONTROL_PLANE_API_URL` and `VITE_AGENT_RUNTIME_API_URL` are public build-time API settings, reserved for future connectivity. For host Vite, copy the two values into ignored `apps/web/.env.local` or export them in the shell. Compose supplies them as build arguments. Never put secrets in `VITE_*`; rebuilding is required after changes. The current frontend performs no API requests or polling.
 
@@ -73,15 +73,19 @@ Copy `.env.example` to the ignored root `.env` and set a unique **local developm
 
 ```sh
 cp .env.example .env
-# Edit .env and set POSTGRES_PASSWORD before continuing.
+# Edit .env and set all three distinct passwords before continuing.
 docker compose config --quiet
+docker compose up -d --wait postgres
+docker compose build control-plane
+# Export MIGRATION_DB_PASSWORD from your local secret source, without echoing it.
+docker compose run --rm --no-deps -e MIGRATION_DB_PASSWORD control-plane --spring.profiles.active=migration
 docker compose up --build --wait
 docker compose ps
 docker compose logs --tail=100
 docker compose down
 ```
 
-Use either host servers or Compose to avoid port conflicts. All published development ports bind to `127.0.0.1`; PostgreSQL has no published host port. Services share Compose's default network and resolve each other by service name. Browser API addresses use host loopback, not Compose DNS. Apps intentionally do not depend on database startup. Data persists in the `postgres-data` named volume when containers stop; do not remove the volume unless intentionally discarding local data.
+Use either host servers or Compose to avoid port conflicts. All published development ports bind to `127.0.0.1`; PostgreSQL has no published host port. Services share Compose's default network and resolve each other by service name. Browser API addresses use host loopback, not Compose DNS. Process health intentionally does not depend on database startup or migration state. Data persists in the `postgres-data` named volume when containers stop; do not remove the volume unless intentionally discarding local data. Existing EAAP-001 volumes need explicit [role provisioning](docs/engineering/database-operations.md) before migration; initialization scripts never reset them automatically.
 
 See [container operations](infrastructure/docker/README.md) for exact image versions, health checks, resource caps, and pgvector verification. Vite preview serves the built frontend for local development only; production hosting is outside this task.
 
@@ -109,6 +113,6 @@ npm test
 npm run build
 ```
 
-Java tests cover anonymous health, restricted routes, and rejected health writes. Python tests cover response/schema, hidden docs, safe settings, and lack of permissive CORS. The Vitest smoke test renders the actual React screen and checks its identity and disconnected service statuses without adding a browser-test library.
+Java `verify` requires Docker: it covers HTTP security/liveness with an unavailable database, then Flyway/schema/role/RLS behavior using a disposable Testcontainers PostgreSQL instance. No development data is used. The migration and isolation design is recorded in [ADR 0001](docs/architecture/decisions/0001-postgresql-tenant-isolation.md). Python tests cover response/schema, hidden docs, safe settings, and lack of permissive CORS. The Vitest smoke test renders the actual React screen and checks its identity and disconnected service statuses without adding a browser-test library.
 
-GitHub Actions runs these components independently with read-only repository permissions, immutable action SHAs, and no deployment or paid API calls. See [EAAP-001 evidence](docs/tasks/EAAP-001.md) for executed checks and limitations; a workflow definition alone is not evidence of passing CI.
+GitHub Actions runs these components independently with read-only repository permissions, immutable action SHAs, and no deployment or paid API calls. See [EAAP-001 evidence](docs/tasks/EAAP-001.md) and [EAAP-002 evidence](docs/tasks/EAAP-002.md) for executed checks and limitations; a workflow definition alone is not evidence of passing CI.

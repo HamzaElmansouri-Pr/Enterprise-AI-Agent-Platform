@@ -5,9 +5,9 @@ RUN apt-get update \
 WORKDIR /build
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN ./mvnw -B -ntp dependency:go-offline
 COPY src src
-RUN ./mvnw -B -ntp verify
+# Database integration tests run in host/CI verify, never via a Docker socket in builds.
+RUN ./mvnw -B -ntp package
 
 FROM eclipse-temurin:21.0.13.1_2-jre-jammy
 RUN apt-get update \

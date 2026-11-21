@@ -2,7 +2,7 @@ name: Foundation CI
 
 on:
   push:
-    branches: [master, 'chore/**']
+    branches: [master, 'chore/**', 'feat/**']
   pull_request:
     branches: [master]
 
@@ -15,9 +15,9 @@ concurrency:
 
 jobs:
   java:
-    name: Java build and security tests
+    name: Java build, security, and PostgreSQL isolation tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: services/control-plane
@@ -31,6 +31,8 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: services/control-plane/pom.xml
+      - name: Verify Docker for Testcontainers
+        run: docker version
       - run: ./mvnw -B -ntp verify
 
   python:

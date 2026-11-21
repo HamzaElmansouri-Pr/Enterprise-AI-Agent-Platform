@@ -8,6 +8,8 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eaap_dev}
+      DB_PASSWORD: ${DB_PASSWORD:?Set a unique local runtime password in .env}
     mem_limit: 768m
     cpus: 1.0
     security_opt:
@@ -64,8 +66,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-eaap_dev}
       POSTGRES_USER: ${POSTGRES_USER:-eaap_dev}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a unique local POSTGRES_PASSWORD in .env}
+      MIGRATION_DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?Set a unique local migration password in .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Set a unique local runtime password in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/bootstrap.sh:/docker-entrypoint-initdb.d/10-platform-roles.sh:ro
+      - ./infrastructure/docker/postgres/bootstrap.sql:/opt/eaap/bootstrap.sql:ro
     shm_size: 128m
     mem_limit: 512m
     cpus: 1.0

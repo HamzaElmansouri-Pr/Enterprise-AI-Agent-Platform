@@ -1,6 +1,6 @@
 # Architecture foundation
 
-Status: logical baseline documented by accepted EAAP-000, with development scaffolding specified by EAAP-001. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
+Status: logical baseline documented by accepted EAAP-000, scaffolding by accepted EAAP-001, and persistence/isolation foundation specified by EAAP-002. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
 
 The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules cover [coding](../engineering/coding-standards.md), [security](../engineering/security-standards.md), [testing](../engineering/testing-strategy.md), and [Git workflow](../engineering/git-workflow.md). See the [task register](../tasks/README.md) for the repository audit.
 
@@ -8,13 +8,13 @@ The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules c
 
 | Area | Approved technology | Version status |
 | --- | --- | --- |
-| Control plane and future Tool Gateway | Java, Spring Boot, Spring Security; Spring Data JPA and Flyway reserved for future tasks | Java 21; Spring Boot 3.5.16; Maven 3.9.11 with Wrapper 3.3.4 |
+| Control plane and future Tool Gateway | Java, Spring Boot, Spring Security, Spring Data JPA, Flyway, PostgreSQL JDBC | Java 21; Spring Boot 3.5.16; Maven 3.9.11 with Wrapper 3.3.4; Boot-managed persistence/test dependencies |
 | Agent runtime | Python, FastAPI, LangGraph | Python 3.12; FastAPI 0.165.0; LangGraph 1.2.24; uv 0.13.9 |
 | Frontend | React, TypeScript, Vite | React 19.3.1; TypeScript 6.0.3; Vite 8.3.8; Node 22; npm |
-| Persistence and retrieval storage | PostgreSQL, pgvector | PostgreSQL 17; pgvector 0.8.7; infrastructure only |
+| Persistence and retrieval storage | PostgreSQL, pgvector | PostgreSQL 17; pgvector 0.8.7 available but not activated; tenant-identity/RLS schema via Flyway |
 | Development and CI | Docker Compose, GitHub Actions | Concrete container tags and immutable action SHAs in configuration |
 
-EAAP-001 introduces manifests and Python/npm lockfiles. See its [implementation notes](../tasks/EAAP-001.md) and [container versions](../../infrastructure/docker/README.md). JPA, Flyway, database access, workflows, and business features are deliberately absent at this stage. Hosted LLM APIs must use a controlled provider abstraction when approved; local GPU inference is not assumed. Alternative frameworks, databases, brokers, state libraries, and orchestration libraries require authorization.
+EAAP-001 introduced manifests and Python/npm lockfiles. See its [implementation notes](../tasks/EAAP-001.md) and [container versions](../../infrastructure/docker/README.md). EAAP-002 introduces persistence dependencies, Flyway migrations, role separation, and an internal transaction-local context helper; it introduces no JPA entities, business APIs, authentication, or workflows. See [ADR 0001](decisions/0001-postgresql-tenant-isolation.md) and [database operations](../engineering/database-operations.md). Hosted LLM APIs must use a controlled provider abstraction when approved; local GPU inference is not assumed. Alternative frameworks, databases, brokers, state libraries, and orchestration libraries require authorization.
 
 ## Logical responsibilities and ownership
 
@@ -43,7 +43,7 @@ Frontend features separate components, hooks, API clients, models, validation, a
 - Versions and tooling for future dependencies; EAAP-001 resolves the initial scaffolding versions and build/package tooling only.
 - Concrete business modules, API contracts, and compatibility expectations.
 - Authentication approach, tenant identity propagation, authorization model, and approval lifecycle.
-- Database schema, tenant isolation design, ordinary application roles, and RLS verification approach.
+- Future business schemas and access patterns; tenant lifecycle rules and privileged discovery/administration. EAAP-002 resolves the initial identity schema, database roles, transaction-local context, and RLS mechanism only.
 - Retrieval and ingestion placement, access contracts, and background execution mechanism.
 - Hosted model provider selection and provider contract; operational budgets and timeouts.
 - Observability/evaluation implementation and deployment/resource configuration.
@@ -52,4 +52,4 @@ These are decision requests, not approved choices. They do not block this docume
 
 ## Architecture decision records
 
-The `decisions/` directory is reserved for actual ADRs. It contains no approved ADRs at EAAP-000. Record real decisions and explicit approval status when provided by the architect; never present placeholders as approved. Git does not track empty directories, so the directory becomes persistent when an actual ADR is added.
+The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-isolation.md), recording the database isolation approach approved by EAAP-002 and the implementation choices awaiting independent review. No speculative authentication or tenant lifecycle decisions are presented as approved.

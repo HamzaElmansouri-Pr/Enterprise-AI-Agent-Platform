@@ -8,6 +8,10 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 public class ControlPlaneApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ControlPlaneApplication.class, args);
+        var context = SpringApplication.run(ControlPlaneApplication.class, args);
+        // Migration mode is a one-shot process with separate credentials and no HTTP server.
+        if (context.getEnvironment().matchesProfiles("migration")) {
+            context.close();
+        }
     }
 }

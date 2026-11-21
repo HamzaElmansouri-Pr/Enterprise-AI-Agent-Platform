@@ -11,6 +11,10 @@ import java.util.UUID;
 
 /** Offline insert-only operator use case, never installed as an HTTP endpoint. */
 public final class IdentityBootstrap {
+    /** Messages are fixed validation descriptions, never input values or underlying exception text. */
+    public static final class InputFailure extends IllegalArgumentException {
+        public InputFailure(String message) { super(message); }
+    }
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transaction;
     public IdentityBootstrap(DataSource source) {
@@ -19,9 +23,14 @@ public final class IdentityBootstrap {
         transaction.setTimeout(5);
     }
     public void execute(UUID tenantId, String name, UUID userId, Email email, String password) {
-        if (tenantId == null || userId == null || name == null || name.isBlank() || name.length() > 200
-                || email == null || password == null || password.isBlank() || password.length() < 16 || password.length() > 128) {
-            throw new IllegalArgumentException("Incomplete or unsafe identity bootstrap input");
+        if (tenantId == null) throw new InputFailure("BOOTSTRAP_TENANT_ID must be a UUID");
+        if (userId == null) throw new InputFailure("BOOTSTRAP_USER_ID must be a UUID");
+        if (name == null || name.isBlank() || name.length() > 200) {
+            throw new InputFailure("BOOTSTRAP_TENANT_NAME must contain 1–200 nonblank characters");
+        }
+        if (email == null) throw new InputFailure("BOOTSTRAP_EMAIL must be a valid email");
+        if (password == null || password.isBlank() || password.length() < 16 || password.length() > 128) {
+            throw new InputFailure("BOOTSTRAP_PASSWORD must contain 16–128 characters and cannot be blank");
         }
         var encoder = new ArgonPasswords();
         String hash = encoder.encode(password);

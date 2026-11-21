@@ -14,15 +14,27 @@ import java.util.UUID;
 public class BootstrapConfiguration {
     private static String required(Environment env, String key) {
         String value = env.getProperty(key);
-        if (value == null || value.isBlank()) throw new IllegalArgumentException("Missing bootstrap input: " + key);
+        if (value == null || value.isBlank()) throw new IdentityBootstrap.InputFailure("Missing required input: " + key);
         return value;
+    }
+    private static UUID uuid(Environment env, String key) {
+        String value = required(env, key);
+        try { return UUID.fromString(value); }
+        catch (IllegalArgumentException error) { throw new IdentityBootstrap.InputFailure(key + " must be a UUID"); }
+    }
+    private static Email email(Environment env) {
+        String value = required(env, "BOOTSTRAP_EMAIL");
+        try { return new Email(value); }
+        catch (IllegalArgumentException error) { throw new IdentityBootstrap.InputFailure("BOOTSTRAP_EMAIL must be a valid email"); }
     }
     @Bean ApplicationRunner bootstrapIdentity(Environment env, DataSource source) {
         return args -> {
             try {
-                new IdentityBootstrap(source).execute(UUID.fromString(required(env, "BOOTSTRAP_TENANT_ID")),
-                        required(env, "BOOTSTRAP_TENANT_NAME"), UUID.fromString(required(env, "BOOTSTRAP_USER_ID")),
-                        new Email(required(env, "BOOTSTRAP_EMAIL")), required(env, "BOOTSTRAP_PASSWORD"));
+                new IdentityBootstrap(source).execute(uuid(env, "BOOTSTRAP_TENANT_ID"),
+                        required(env, "BOOTSTRAP_TENANT_NAME"), uuid(env, "BOOTSTRAP_USER_ID"),
+                        email(env), required(env, "BOOTSTRAP_PASSWORD"));
+            } catch (IdentityBootstrap.InputFailure error) {
+                throw new IllegalStateException("Identity bootstrap failed: " + error.getMessage());
             } catch (RuntimeException error) {
                 throw new IllegalStateException("Identity bootstrap failed; check operator configuration and inputs");
             }

@@ -2,6 +2,10 @@
 
 Tasks require architect-approved scope and acceptance criteria. Engineers implement approved work and report evidence following [AGENTS.md](../../AGENTS.md) and the [Git workflow](../engineering/git-workflow.md). Human architect acceptance is separate from an engineering delivery report.
 
+## EAAP-001 — Repository scaffolding and development foundation
+
+See [scope, dependency versions, implementation decisions, and validation evidence](EAAP-001.md). The architect accepted EAAP-000 before assigning EAAP-001; its audit below remains a historical snapshot. The new task selects initial build tooling and versions, superseding that part of EAAP-000's outstanding decisions. Other application architecture decisions remain open.
+
 ## EAAP-000 — Repository audit and engineering foundation
 
 Scope: inspect the repository and establish governance documentation without application implementations, database entities, authentication, agents, dependency manifests, or infrastructure configuration.

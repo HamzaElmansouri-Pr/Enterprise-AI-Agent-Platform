@@ -1,6 +1,6 @@
 # Architecture foundation
 
-Status: approved task baseline documented by EAAP-000; no implementation or new architectural decisions are introduced here. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
+Status: logical baseline documented by accepted EAAP-000, with development scaffolding specified by EAAP-001. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
 
 The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules cover [coding](../engineering/coding-standards.md), [security](../engineering/security-standards.md), [testing](../engineering/testing-strategy.md), and [Git workflow](../engineering/git-workflow.md). See the [task register](../tasks/README.md) for the repository audit.
 
@@ -8,13 +8,13 @@ The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules c
 
 | Area | Approved technology | Version status |
 | --- | --- | --- |
-| Control plane and Tool Gateway | Java, Spring Boot, Spring Security, Spring Data JPA, Flyway | Java 21; Spring Boot 3.x; exact versions not selected |
-| Agent runtime | Python, FastAPI, LangGraph | Exact versions not selected |
-| Frontend | React, TypeScript | Exact versions not selected |
-| Persistence and retrieval storage | PostgreSQL, pgvector | Exact versions not selected |
-| Development and CI | Docker Compose, GitHub Actions | Exact versions not selected |
+| Control plane and future Tool Gateway | Java, Spring Boot, Spring Security; Spring Data JPA and Flyway reserved for future tasks | Java 21; Spring Boot 3.5.16; Maven 3.9.11 with Wrapper 3.3.4 |
+| Agent runtime | Python, FastAPI, LangGraph | Python 3.12; FastAPI 0.165.0; LangGraph 1.2.24; uv 0.13.9 |
+| Frontend | React, TypeScript, Vite | React 19.3.1; TypeScript 6.0.3; Vite 8.3.8; Node 22; npm |
+| Persistence and retrieval storage | PostgreSQL, pgvector | PostgreSQL 17; pgvector 0.8.7; infrastructure only |
+| Development and CI | Docker Compose, GitHub Actions | Concrete container tags and immutable action SHAs in configuration |
 
-No dependency manifests exist yet. Pin exact versions in manifests and architecture records before implementation. Hosted LLM APIs must use a controlled provider abstraction; local GPU inference is not assumed. Alternative frameworks, databases, brokers, state libraries, and orchestration libraries require authorization.
+EAAP-001 introduces manifests and Python/npm lockfiles. See its [implementation notes](../tasks/EAAP-001.md) and [container versions](../../infrastructure/docker/README.md). JPA, Flyway, database access, workflows, and business features are deliberately absent at this stage. Hosted LLM APIs must use a controlled provider abstraction when approved; local GPU inference is not assumed. Alternative frameworks, databases, brokers, state libraries, and orchestration libraries require authorization.
 
 ## Logical responsibilities and ownership
 
@@ -40,7 +40,7 @@ Frontend features separate components, hooks, API clients, models, validation, a
 
 ## Decisions required before affected implementation
 
-- Exact dependency versions and build/package tooling within the approved stack.
+- Versions and tooling for future dependencies; EAAP-001 resolves the initial scaffolding versions and build/package tooling only.
 - Concrete business modules, API contracts, and compatibility expectations.
 - Authentication approach, tenant identity propagation, authorization model, and approval lifecycle.
 - Database schema, tenant isolation design, ordinary application roles, and RLS verification approach.

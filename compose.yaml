@@ -66,6 +66,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-eaap_dev}
       POSTGRES_USER: ${POSTGRES_USER:-eaap_dev}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a unique local POSTGRES_PASSWORD in .env}
+      IDENTITY_OPERATOR_DB_PASSWORD: ${IDENTITY_OPERATOR_DB_PASSWORD:?Set a distinct operator password in .env}
       MIGRATION_DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?Set a unique local migration password in .env}
       DB_PASSWORD: ${DB_PASSWORD:?Set a unique local runtime password in .env}
     volumes:

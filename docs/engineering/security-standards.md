@@ -1,6 +1,6 @@
 # Security standards
 
-Security is release-blocking under [AGENTS.md](../../AGENTS.md). These inherited controls apply within the [approved boundaries](../architecture/README.md). No security product or authentication implementation is selected here.
+Security is release-blocking under [AGENTS.md](../../AGENTS.md). These inherited controls apply within the [approved boundaries](../architecture/README.md). EAAP-003 selects the initial implementation in [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md); no additional security product is selected.
 
 ## Trust boundaries and authorization
 

@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   java:
-    name: Java build, security, and PostgreSQL isolation tests
+    name: Java build, authentication, authorization, and PostgreSQL isolation tests
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
@@ -33,7 +33,9 @@ jobs:
           cache-dependency-path: services/control-plane/pom.xml
       - name: Verify Docker for Testcontainers
         run: docker version
-      - run: ./mvnw -B -ntp verify
+      # AuthenticationIT generates ephemeral test-only RSA keys; no signing secrets are injected.
+      - name: Verify login, JWT, membership, bootstrap, and RLS regressions
+        run: ./mvnw -B -ntp verify
 
   python:
     name: Python lint and tests

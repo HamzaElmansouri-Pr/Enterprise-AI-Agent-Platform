@@ -14,6 +14,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,17 +31,25 @@ public class SecurityConfiguration {
     }
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokens tokens, IdentityStore identities) throws Exception {
+        var paths = PathPatternRequestMatcher.withDefaults();
+        var agentWrites = new OrRequestMatcher(
+                paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/agents"),
+                paths.matcher(HttpMethod.PUT, "/api/v1/tenants/*/agents/*"),
+                paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/agents/*/archive"));
         return http
                 .addFilterBefore(new SecurityRequestFilter(), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tenants/*/context").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tenants/*/agents", "/api/v1/tenants/*/agents/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/tenants/*/agents", "/api/v1/tenants/*/agents/*/archive").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/tenants/*/agents/*").authenticated()
                         .anyRequest().denyAll())
-                // Only JSON login is excluded: no cookies/session credentials, query input rejected.
-                // Tenant GET requires bearer Authorization; no state-changing bearer APIs exist yet.
+                // Only approved stateless login/agent writes are exempt: authentication uses bearer
+                // Authorization headers, never cookies or sessions. All other routes retain CSRF.
                 .csrf(csrf -> csrf.ignoringRequestMatchers(request -> "POST".equals(request.getMethod())
-                        && (request.getContextPath() + "/api/v1/auth/login").equals(request.getRequestURI())))
+                        && (request.getContextPath() + "/api/v1/auth/login").equals(request.getRequestURI()), agentWrites))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(cache -> cache.disable())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.decoder(tokens).jwtAuthenticationConverter(token -> {

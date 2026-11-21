@@ -46,7 +46,12 @@ ALTER DEFAULT PRIVILEGES FOR ROLE eaap_migration IN SCHEMA platform
     REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 SELECT format('ALTER ROLE eaap_runtime IN DATABASE %I SET search_path = pg_catalog, platform', current_database()) \gexec
 SELECT format('ALTER ROLE eaap_migration IN DATABASE %I SET search_path = pg_catalog, platform', current_database()) \gexec
--- Password hashes are sensitive too: prevent row DETAIL / bound SQL dumps for identity sessions.
+-- Identity hashes and agent instructions are sensitive. Keep SQL/failed-row dumps out of logs.
+ALTER ROLE eaap_runtime SET log_error_verbosity = 'terse';
+ALTER ROLE eaap_runtime SET log_min_error_statement = 'panic';
+ALTER ROLE eaap_runtime SET log_statement = 'none';
+ALTER ROLE eaap_runtime SET log_parameter_max_length = 0;
+ALTER ROLE eaap_runtime SET log_parameter_max_length_on_error = 0;
 ALTER ROLE eaap_identity_operator SET log_error_verbosity = 'terse';
 ALTER ROLE eaap_identity_operator SET log_min_error_statement = 'panic';
 ALTER ROLE eaap_identity_operator SET log_statement = 'none';

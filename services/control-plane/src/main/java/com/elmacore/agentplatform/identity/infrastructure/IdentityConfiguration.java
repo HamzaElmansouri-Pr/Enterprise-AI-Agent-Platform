@@ -5,6 +5,7 @@ import com.elmacore.agentplatform.identity.application.Passwords;
 import com.elmacore.agentplatform.identity.application.Login;
 import com.elmacore.agentplatform.identity.application.TenantRegistry;
 import com.elmacore.agentplatform.identity.application.TenantContext;
+import com.elmacore.agentplatform.identity.application.MembershipAuthorization;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +24,10 @@ public class IdentityConfiguration {
         return new Login(identities, passwords, tokens);
     }
     @Bean TenantRegistry tenantRegistry(DataSource source) { return new JdbcTenantRegistry(source); }
-    @Bean TenantContext tenantContext(IdentityStore identities, TenantRegistry registry) {
-        return new TenantContext(identities, registry);
+    @Bean MembershipAuthorization membershipAuthorization(IdentityStore identities) {
+        return new MembershipAuthorization(identities);
+    }
+    @Bean TenantContext tenantContext(MembershipAuthorization authorization, TenantRegistry registry) {
+        return new TenantContext(authorization, registry);
     }
 }

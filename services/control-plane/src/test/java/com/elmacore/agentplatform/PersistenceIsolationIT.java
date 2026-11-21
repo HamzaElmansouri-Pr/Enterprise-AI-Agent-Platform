@@ -59,7 +59,7 @@ class PersistenceIsolationIT {
                 .dataSource(POSTGRES.getJdbcUrl(), "eaap_migration", MIGRATION_PASSWORD)
                 .schemas("platform").defaultSchema("platform").createSchemas(false)
                 .cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
 
         // Administrator only seeds deterministic fixtures; tenant access tests always use runtime.
         try (var admin = admin(); var statement = admin.createStatement()) {
@@ -106,7 +106,7 @@ class PersistenceIsolationIT {
     void migrationHistoryRemainsValidAndRepeatedMigrationIsANoOp() {
         flyway.validate();
         assertThat(flyway.migrate().migrationsExecuted).isZero();
-        assertThat(flyway.info().applied()).hasSize(2);
+        assertThat(flyway.info().applied()).hasSize(3);
         try (var context = new SpringApplicationBuilder(ControlPlaneApplication.class)
                 .profiles("migration")
                 .initializers(application -> application.getEnvironment().getPropertySources().addFirst(
@@ -116,7 +116,7 @@ class PersistenceIsolationIT {
                 .run()) {
             assertThat(context).isNotInstanceOf(WebServerApplicationContext.class);
             assertThat(context.containsBean("entityManagerFactory")).isFalse();
-            assertThat(context.getBean(Flyway.class).info().applied()).hasSize(2);
+            assertThat(context.getBean(Flyway.class).info().applied()).hasSize(3);
             assertThat(context.getBean(HikariDataSource.class).getUsername()).isEqualTo("eaap_migration");
         }
     }

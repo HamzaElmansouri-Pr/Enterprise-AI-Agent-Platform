@@ -1,6 +1,6 @@
 # Architecture foundation
 
-Status: EAAP-000 logical baseline, EAAP-001 scaffolding, and EAAP-002 persistence/isolation are accepted. EAAP-003 authentication/membership is accepted. EAAP-004 agent configuration management is accepted. EAAP-005 adds knowledge ingestion and retrieval, pending independent review. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
+Status: EAAP-000 logical baseline, EAAP-001 scaffolding, and EAAP-002 persistence/isolation are accepted. EAAP-003 authentication/membership is accepted. EAAP-004 agent configuration management is accepted. EAAP-005 knowledge ingestion and retrieval is accepted. EAAP-006 adds controlled execution, pending independent review. The human architect owns requirements, architecture, technology selection, and acceptance. Engineers implement approved specifications.
 
 The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules cover [coding](../engineering/coding-standards.md), [security](../engineering/security-standards.md), [testing](../engineering/testing-strategy.md), and [Git workflow](../engineering/git-workflow.md). See the [task register](../tasks/README.md) for the repository audit.
 
@@ -57,3 +57,5 @@ The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-
 [ADR 0003](decisions/0003-agent-configuration-domain.md) records agent configuration management, authorized transaction reuse, terminal archival, and its API/security/resource boundaries. Agent execution remains outside this delivery.
 
 [ADR 0004](decisions/0004-knowledge-ingestion-and-retrieval.md) assigns the initial knowledge source/extraction/vector/retrieval slice to Spring Boot and only local CPU embedding computation to FastAPI. This resolves that initial placement; ingestion scaling and future RAG/agent execution contracts remain open.
+
+[ADR 0005](decisions/0005-controlled-agent-execution.md) defines the bounded synchronous LangGraph/hosted-provider execution slice, tenant/creator-isolated run persistence, daily budgets, and validated source mapping. See [execution operations](../engineering/agent-execution-operations.md).

@@ -1,0 +1,15 @@
+# Opt-in execution. Use after compose.auth.yaml and compose.knowledge.yaml.
+# No new services; provider credentials go only to the internal Python runtime.
+services:
+  control-plane:
+    environment:
+      EXECUTION_RUNTIME_URL: http://agent-runtime:8000
+      EXECUTION_INTERNAL_SECRET: ${EXECUTION_INTERNAL_SECRET:?Set a dedicated random execution secret of at least 32 characters}
+  agent-runtime:
+    ports: !reset []
+    environment:
+      EXECUTION_INTERNAL_SECRET: ${EXECUTION_INTERNAL_SECRET:?Set a dedicated random execution secret of at least 32 characters}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EXECUTION_MODEL: ${EXECUTION_MODEL:-}
+      EXECUTION_MAX_OUTPUT_TOKENS: ${EXECUTION_MAX_OUTPUT_TOKENS:-800}
+      EXECUTION_PROVIDER_TIMEOUT_SECONDS: ${EXECUTION_PROVIDER_TIMEOUT_SECONDS:-30}

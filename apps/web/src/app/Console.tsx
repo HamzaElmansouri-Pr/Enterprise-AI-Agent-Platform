@@ -7,6 +7,7 @@ import { Agents } from "../features/agents/Agents";
 import { Knowledge, Search } from "../features/knowledge/Knowledge";
 import { Executions } from "../features/executions/Executions";
 import { Approvals } from "../features/approvals/Approvals";
+import { Team } from "../features/team/Team";
 import { Tasks } from "../features/admissions/Tasks";
 const pages = [
   ["dashboard", "Overview", "01"],
@@ -16,8 +17,10 @@ const pages = [
   ["executions", "Ask an agent", "05"],
   ["approvals", "Tool proposals", "06"],
   ["tasks", "Follow-up tasks", "07"],
+  ["team", "Team & Access", "08"],
 ];
 export function Console({
+  onContext,
   client,
   context,
   onSwitch,
@@ -25,6 +28,7 @@ export function Console({
   acknowledged,
   onAcknowledge,
 }: {
+  onContext: (context: TenantContext, client: ApiClient) => void;
   client: ApiClient;
   context: TenantContext;
   onSwitch: () => void;
@@ -107,6 +111,8 @@ export function Console({
               context={context}
               onTasks={() => setPage("tasks")}
             />
+          ) : page === "team" ? (
+            <Team api={api} onContext={onContext} />
           ) : (
             <Tasks api={api} />
           )}

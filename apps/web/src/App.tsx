@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "./api/client";
 import type { TenantContext } from "./api/contracts";
 import { MemorySession } from "./auth/session";
+import { AcceptInvitation, InvitationAccepted } from "./auth/AcceptInvitation";
+import type { AcceptedInvitation } from "./api/contracts";
 import { Login } from "./auth/Login";
 import { TenantSelection } from "./auth/TenantSelection";
 import { Console } from "./app/Console";
@@ -15,6 +17,19 @@ function App() {
   const [auth, setAuth] = useState<AuthState | null>(null),
     [message, setMessage] = useState(""),
     [acknowledged, setAcknowledged] = useState(false);
+  const [accepting, setAccepting] = useState(false),
+    [accepted, setAccepted] = useState<AcceptedInvitation | null>(null);
+  const onContext = useCallback(
+    (context: TenantContext, client: ApiClient) =>
+      setAuth((current) =>
+        current &&
+        current.client === client &&
+        current.context?.role !== context.role
+          ? { ...current, context }
+          : current,
+      ),
+    [],
+  );
   const [loginClient] = useState(() => new ApiClient(null));
   useEffect(() => {
     if (!auth) return;
@@ -44,10 +59,40 @@ function App() {
       setMessage("Your session expired. Please sign in again.");
     };
     setMessage("");
+    setAccepted(null);
     setAuth({ session, client: session.scope(expired), scope: 0 });
   }
-  if (!auth)
-    return <Login api={loginClient} message={message} onLogin={login} />;
+  if (!auth) {
+    if (accepting)
+      return (
+        <AcceptInvitation
+          api={loginClient}
+          existing={false}
+          onBack={() => setAccepting(false)}
+          onAccepted={(result) => {
+            setAccepting(false);
+            setAccepted(result);
+            setMessage(
+              "Account created. Sign in with your existing login form.",
+            );
+          }}
+        />
+      );
+    return (
+      <>
+        {accepted && <InvitationAccepted result={accepted} />}
+        <Login
+          api={loginClient}
+          message={message}
+          onLogin={login}
+          onAccept={() => {
+            setAccepted(null);
+            setAccepting(true);
+          }}
+        />
+      </>
+    );
+  }
   if (!auth.context)
     return (
       <TenantSelection
@@ -60,6 +105,7 @@ function App() {
   return (
     <Console
       key={auth.scope}
+      onContext={onContext}
       client={auth.client}
       context={auth.context}
       acknowledged={acknowledged}

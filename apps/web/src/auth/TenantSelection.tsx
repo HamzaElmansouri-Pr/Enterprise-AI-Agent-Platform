@@ -1,3 +1,4 @@
+import { AcceptInvitation } from "./AcceptInvitation";
 import { useState } from "react";
 import { ApiClient } from "../api/client";
 import { contextContract, isUuid } from "../api/contracts";
@@ -15,7 +16,24 @@ export function TenantSelection({
 }) {
   const [tenant, setTenant] = useState(""),
     [invalid, setInvalid] = useState(false);
+  const [accepting, setAccepting] = useState(false),
+    [notice, setNotice] = useState("");
   const action = useAction();
+  if (accepting)
+    return (
+      <AcceptInvitation
+        existing
+        api={api}
+        onBack={() => setAccepting(false)}
+        onAccepted={(result) => {
+          setAccepting(false);
+          setTenant(result.tenantId);
+          setNotice(
+            "Invitation accepted. Open workspace to verify your membership.",
+          );
+        }}
+      />
+    );
   return (
     <main className="auth-wrap">
       <section className="auth-card">
@@ -25,6 +43,8 @@ export function TenantSelection({
           Enter an existing tenant UUID. Spring will verify your current
           membership.
         </p>
+        {notice && <p role="status">{notice}</p>}
+        <button onClick={() => setAccepting(true)}>Accept an invitation</button>
         <form
           onSubmit={(e) => {
             e.preventDefault();

@@ -1,6 +1,6 @@
 # Authentication operations
 
-Follow [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md) and [database operations](database-operations.md). No public registration or bootstrap API exists. These are local development procedures; production provisioning and coordinated abuse protection require separate review.
+Follow [ADR 0002](../architecture/decisions/0002-authentication-and-tenant-authorization.md) and [database operations](database-operations.md). No unrestricted public registration or bootstrap API exists. EAAP-009 adds narrowly scoped invitation acceptance; see [tenant access operations](tenant-access-operations.md) for colleague provisioning without SQL. These are local development procedures; production provisioning and coordinated abuse protection require separate review.
 
 ## Provision and migrate
 

@@ -185,3 +185,40 @@ export type Page<T> = {
   size: number;
   hasNext: boolean;
 };
+
+export const memberContract = object({
+  userId: uuid,
+  email: nullable(text),
+  role: choice("OWNER", "ADMIN", "MEMBER"),
+  createdAt: date,
+});
+export type Member = ReturnType<typeof memberContract>;
+export const invitationContract = object({
+  id: uuid,
+  tenantId: uuid,
+  email: text,
+  role: choice("ADMIN", "MEMBER"),
+  invitedBy: uuid,
+  status: choice("PENDING", "ACCEPTED", "CANCELLED"),
+  createdAt: date,
+  expiresAt: date,
+  expired: bool,
+  acceptedAt: nullable(date),
+  acceptedBy: nullable(uuid),
+  cancelledAt: nullable(date),
+  cancelledBy: nullable(uuid),
+});
+export type Invitation = ReturnType<typeof invitationContract>;
+export const issuedContract = object({
+  invitation: invitationContract,
+  token: text,
+});
+export type IssuedInvitation = ReturnType<typeof issuedContract>;
+export const acceptedContract = object({
+  invitationId: uuid,
+  tenantId: uuid,
+  userId: uuid,
+  role: choice("ADMIN", "MEMBER"),
+});
+export type AcceptedInvitation = ReturnType<typeof acceptedContract>;
+export const completedContract = object({ completed: bool });

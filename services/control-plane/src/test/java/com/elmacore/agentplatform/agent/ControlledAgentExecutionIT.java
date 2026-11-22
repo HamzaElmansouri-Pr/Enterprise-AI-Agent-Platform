@@ -48,7 +48,7 @@ class ControlledAgentExecutionIT {
     @BeforeEach void seed()throws Exception {
         runtime.reset();
         try(var c=admin(DB);var s=c.createStatement()) {
-            s.execute("TRUNCATE platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs,platform.agent_run_daily_quota,platform.knowledge_chunks,platform.agent_documents,platform.knowledge_content,platform.knowledge_documents,platform.agent_configurations,platform.tenant_memberships,platform.users,platform.tenants");
+            s.execute("TRUNCATE platform.tenant_access_audit,platform.tenant_invitations,platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs,platform.agent_run_daily_quota,platform.knowledge_chunks,platform.agent_documents,platform.knowledge_content,platform.knowledge_documents,platform.agent_configurations,platform.tenant_memberships,platform.users,platform.tenants");
             try(var p=c.prepareStatement("INSERT INTO platform.tenants(id,name) VALUES(?,'A'),(?,'B')")){p.setObject(1,A);p.setObject(2,B);p.executeUpdate();}
             for(UUID u:List.of(OWNER,ADMIN,MEMBER,B_OWNER,OUTSIDER)) {
                 try(var p=c.prepareStatement("INSERT INTO platform.users(id,email,password_hash) VALUES(?,?,'$argon2id$test-only-unused')")){p.setObject(1,u);p.setString(2,"u"+u+"@example.test");p.executeUpdate();}
@@ -131,14 +131,35 @@ class ControlledAgentExecutionIT {
         assertThat(runtime.calls.get()).isZero();assertThat(attempts()).isEqualTo(1);
     }
     @Test void contextBoundAndMetadataSurviveSixPassages() {
-        for(int i=0;i<7;i++)ready(OWNER,A,AGENT_A,"passport "+i+" "+"a".repeat(1000));
+        var associated=new HashSet<UUID>();
+        for(int i=0;i<7;i++)associated.add(ready(OWNER,A,AGENT_A,"passport "+i+" "+"a".repeat(1000)));
+        ready(OWNER,A,null,"UNASSOCIATED_PRIVATE");
+        ready(B_OWNER,B,AGENT_B,"OTHER_TENANT_PRIVATE");
         execute(OWNER);
         assertThat(runtime.last.passages()).hasSize(5);
         assertThat(runtime.last.passages().stream().mapToInt(p->p.text().codePointCount(0,p.text().length())).sum()).isLessThanOrEqualTo(8000);
+        // All fixture embeddings have equal similarity: the retrieval contract's tie-breakers
+        // must preserve the same source order across repeated queries and runtime transport.
+        var matches=knowledge.search(OWNER,A,AGENT_A,"passport?",6);
+        assertThat(matches).hasSize(6);
+        assertThat(knowledge.search(OWNER,A,AGENT_A,"passport?",6)).isEqualTo(matches);
         runtime.calls.set(0);
-        runs.start(OWNER,A,AGENT_A,new RunInput("passport?",6),UUID.randomUUID());
+        runtime.refs=List.of("S1","S2","S3","S4","S5","S6");
+        var result=runs.start(OWNER,A,AGENT_A,new RunInput("passport?",6),UUID.randomUUID());
+        assertThat(runtime.calls.get()).isEqualTo(1);
         assertThat(runtime.last.passages()).hasSize(6);
         assertThat(runtime.last.passages().stream().mapToInt(p->p.text().codePointCount(0,p.text().length())).sum()).isLessThanOrEqualTo(8000);
+        assertThat(result.citations()).hasSize(6);
+        for(int i=0;i<6;i++) {
+            var match=matches.get(i);var passage=runtime.last.passages().get(i);var citation=result.citations().get(i);
+            assertThat(associated).contains(match.documentId());
+            assertThat(passage.sourceId()).isEqualTo("S"+(i+1));
+            assertThat(passage.text()).isEqualTo(match.text()).doesNotContain("UNASSOCIATED_PRIVATE","OTHER_TENANT_PRIVATE");
+            assertThat(citation.documentId()).isEqualTo(match.documentId());
+            assertThat(citation.chunkId()).isEqualTo(match.chunkId());
+            assertThat(citation.filename()).isEqualTo("admissions.txt");
+            assertThat(citation.sourcePage()).isEqualTo(match.sourcePage());
+        }
     }
     @Test void expiredJwtAndForgedTenantClaimsCannotAuthorizeExecution()throws Exception {
         var now=java.time.Instant.now();
@@ -178,7 +199,7 @@ class ControlledAgentExecutionIT {
         assertThat(tx.execute(auth.authorize(OWNER,A),()->store.finish(A,AGENT_A,OWNER,result))).isFalse();
         try(var c=source.getConnection();var s=c.createStatement()) {
             try(var r=s.executeQuery("SELECT count(*) FROM platform.agent_runs")){r.next();assertThat(r.getInt(1)).isZero();}
-            for(String sql:List.of("DELETE FROM platform.agent_runs","TRUNCATE platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs","UPDATE platform.agent_runs SET question='bad'","UPDATE platform.agent_runs SET user_id=gen_random_uuid()","ALTER TABLE platform.agent_runs DISABLE ROW LEVEL SECURITY")) {
+            for(String sql:List.of("DELETE FROM platform.agent_runs","TRUNCATE platform.tenant_access_audit,platform.tenant_invitations,platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs","UPDATE platform.agent_runs SET question='bad'","UPDATE platform.agent_runs SET user_id=gen_random_uuid()","ALTER TABLE platform.agent_runs DISABLE ROW LEVEL SECURITY")) {
                 assertThatThrownBy(()->s.execute(sql)).isInstanceOf(SQLException.class).satisfies(e->assertThat(((SQLException)e).getSQLState()).isEqualTo("42501"));
             }
             c.setAutoCommit(false);PostgresTenantContext.apply(c,B);

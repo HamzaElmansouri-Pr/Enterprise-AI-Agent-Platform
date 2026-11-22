@@ -1,0 +1,1 @@
+SYNTHETIC_UNASSOCIATED_CANARY. Synthetic staff-only cafeteria code is LILAC-42. This document must never appear in benchmark agent retrieval because it is not associated.

@@ -148,3 +148,5 @@ GitHub Actions runs these components independently with read-only repository per
 Controlled agent execution (EAAP-006): [local provider setup, API checks and failure diagnosis](docs/engineering/agent-execution-operations.md). Hosted execution is opt-in; no API key is needed for startup or automated tests.
 
 Trusted tool approval (EAAP-007): [offline two-account proposal, review and task execution](docs/engineering/tool-approval-operations.md). Manual proposals need no paid model; self-approval is prohibited.
+
+Agent evaluation (EAAP-011): [synthetic benchmark CLI](evaluation/README.md) and [operations](docs/engineering/agent-evaluation-operations.md). Offline runs measure actual local embeddings/pgvector and deterministic boundaries. Hosted quality requires a separate explicitly authorized, bounded experiment; no paid calls occur in CI.

@@ -53,10 +53,10 @@ final class KnowledgeTestDatabase {
         assertThat(v2.migrate().migrationsExecuted).isEqualTo(3);
         var latest = Flyway.configure().dataSource(database.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(2);
         latest.validate();
         assertThat(latest.migrate().migrationsExecuted).isZero();
-        assertThat(latest.info().applied()).hasSize(4);
+        assertThat(latest.info().applied()).hasSize(5);
         properties.add("spring.datasource.url", database::getJdbcUrl);
         properties.add("spring.datasource.password", () -> RUNTIME);
         properties.add("spring.datasource.hikari.maximum-pool-size", () -> "2");

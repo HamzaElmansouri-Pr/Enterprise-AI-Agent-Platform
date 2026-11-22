@@ -54,3 +54,5 @@ Required branch: `docs/eaap-000-engineering-foundation`. Required commit message
 The architecture foundation lists unresolved implementation decisions, including versions/tooling, contracts, authentication/tenancy/approvals, schema/roles, retrieval placement, hosted providers, and operational budgets. No extra technology or deviation is proposed. Architect review of these documents and decisions is required before affected implementation.
 
 Recommended next task, subject to architect approval: resolve build/package tooling and exact stack versions, then approve a narrowly scoped repository scaffolding task with explicit validation commands and CI acceptance criteria. Application functionality remains outside EAAP-000.
+
+[EAAP-006 — Controlled agent execution](EAAP-006.md): bounded synchronous runs, LangGraph, hosted-provider adapter, validated citations and private run persistence; pending independent review.

@@ -706,3 +706,9 @@ dialog .actions {
     scroll-behavior: auto !important;
   }
 }
+
+.conversation-messages { display: flex; flex-direction: column; gap: 1rem; margin-block: 1.5rem; }
+.message-bubble { max-width: min(90%, 52rem); padding: 1rem; border: 1px solid var(--border, #ccc); border-radius: .8rem; overflow-wrap: anywhere; }
+.message-user { align-self: flex-end; background: var(--surface, #fff); }
+.message-assistant { align-self: flex-start; }
+@media (max-width: 640px) { .message-bubble { max-width: 100%; width: 100%; } }

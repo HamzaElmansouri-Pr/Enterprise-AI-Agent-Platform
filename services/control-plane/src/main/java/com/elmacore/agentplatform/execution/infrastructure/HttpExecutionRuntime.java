@@ -9,7 +9,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
-public final class HttpExecutionRuntime implements ExecutionRuntime {
+public final class HttpExecutionRuntime implements ExecutionRuntime, com.elmacore.agentplatform.conversation.application.ConversationRuntime {
     private final URI uri;
     private final String secret;
     private final ObjectMapper mapper;
@@ -21,13 +21,15 @@ public final class HttpExecutionRuntime implements ExecutionRuntime {
         if(!secret.isEmpty() && (secret.length()<32 || secret.length()>128 || secret.codePoints().anyMatch(c->c<33 || c>126)))throw new IllegalArgumentException("Invalid execution secret");
         if(!List.of("http","https").contains(uri.getScheme()) || uri.getHost()==null || uri.getUserInfo()!=null || uri.getQuery()!=null || uri.getFragment()!=null)throw new IllegalArgumentException("Invalid runtime address");
     }
-    @Override public Response execute(Request body) {
+    @Override public Response execute(ExecutionRuntime.Request body){return exchange(body,uri,128*1024);}
+    @Override public Response converse(com.elmacore.agentplatform.conversation.application.ConversationRuntime.Request body){return exchange(body,URI.create(uri.toString()+"/conversation"),256*1024);}
+    private Response exchange(Object body,URI target,int maxBytes) {
         if(secret.isEmpty())throw new RunFailure("MODEL_UNAVAILABLE",503);
         CompletableFuture<HttpResponse<byte[]>> pending=null;
         try {
             byte[] bytes=mapper.writeValueAsBytes(body);
-            if(bytes.length>128*1024)throw new RunFailure("CONTEXT_LIMIT",400);
-            var request=HttpRequest.newBuilder(uri).timeout(timeout).header("Content-Type","application/json")
+            if(bytes.length>maxBytes)throw new RunFailure("CONTEXT_LIMIT",400);
+            var request=HttpRequest.newBuilder(target).timeout(timeout).header("Content-Type","application/json")
                 .header("X-Execution-Secret",secret).POST(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
             pending=client.sendAsync(request,info->new BoundedBody());
             var response=pending.get(timeout.toMillis(),TimeUnit.MILLISECONDS);

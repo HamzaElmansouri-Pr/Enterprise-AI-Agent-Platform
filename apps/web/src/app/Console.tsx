@@ -7,6 +7,7 @@ import { Agents } from "../features/agents/Agents";
 import { Knowledge, Search } from "../features/knowledge/Knowledge";
 import { Executions } from "../features/executions/Executions";
 import { Approvals } from "../features/approvals/Approvals";
+import { Conversations } from "../features/conversations/Conversations";
 import { Team } from "../features/team/Team";
 import { Tasks } from "../features/admissions/Tasks";
 const pages = [
@@ -18,6 +19,7 @@ const pages = [
   ["approvals", "Tool proposals", "06"],
   ["tasks", "Follow-up tasks", "07"],
   ["team", "Team & Access", "08"],
+  ["conversations", "Conversations", "09"],
 ];
 export function Console({
   onContext,
@@ -36,6 +38,7 @@ export function Console({
   acknowledged: boolean;
   onAcknowledge: () => void;
 }) {
+  const [pendingTurns] = useState(() => new Map<string, string>());
   const [page, setPage] = useState("dashboard");
   const api = useMemo(
     () => new TenantApi(client, context.tenantId),
@@ -110,6 +113,13 @@ export function Console({
               api={api}
               context={context}
               onTasks={() => setPage("tasks")}
+            />
+          ) : page === "conversations" ? (
+            <Conversations
+              api={api}
+              acknowledged={acknowledged}
+              onAcknowledge={onAcknowledge}
+              pending={pendingTurns}
             />
           ) : page === "team" ? (
             <Team api={api} onContext={onContext} />

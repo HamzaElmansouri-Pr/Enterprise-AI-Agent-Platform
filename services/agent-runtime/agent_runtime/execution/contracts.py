@@ -89,3 +89,26 @@ class ExecutionFailure(Exception):
         self.status = status
         self.model_id = completion.modelId if completion else model_id
         self.usage = completion.usage if completion else usage
+
+
+class HistoryTurn(PrivateModel):
+    question: Annotated[str, Field(min_length=1, max_length=1000)]
+    answer: Annotated[str, Field(min_length=1, max_length=6000)]
+
+    @field_validator("question", "answer")
+    @classmethod
+    def valid_history(cls, value):
+        if not value.strip() or "\0" in value:
+            raise ValueError("invalid history")
+        value.encode("utf-8", errors="strict")
+        return value
+
+
+class ConversationRequest(ExecutionRequest):
+    history: Annotated[list[HistoryTurn], Field(max_length=6)]
+
+    @model_validator(mode="after")
+    def history_bounds(self):
+        if sum(len(t.question) + len(t.answer) for t in self.history) > 8000:
+            raise ValueError("history too large")
+        return self

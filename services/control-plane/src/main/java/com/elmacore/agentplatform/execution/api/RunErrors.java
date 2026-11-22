@@ -10,7 +10,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
-@RestControllerAdvice(assignableTypes=RunController.class)
+@RestControllerAdvice(assignableTypes={RunController.class,com.elmacore.agentplatform.conversation.api.ConversationController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RunErrors {
     public record Error(String code,UUID runId) {}

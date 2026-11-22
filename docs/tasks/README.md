@@ -62,3 +62,5 @@ Recommended next task, subject to architect approval: resolve build/package tool
 [EAAP-008 — Secure tenant operations console](EAAP-008.md): real role-aware React workflows over existing APIs; EAAP-000 through EAAP-007 are accepted; pending independent review.
 
 [EAAP-009 — Tenant invitations and access management](EAAP-009.md): single-use invitations, controlled identity creation, role management and revocation; pending independent review.
+
+[EAAP-010 — Secure multi-turn conversations](EAAP-010.md): creator-owned persistence, run-backed messages, bounded history and request-id recovery; pending independent review.

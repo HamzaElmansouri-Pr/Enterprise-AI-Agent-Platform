@@ -6,7 +6,9 @@ export function AgentSelect({
   api,
   value,
   onChange,
+  includeArchived = false,
 }: {
+  includeArchived?: boolean;
   api: TenantApi;
   value: string;
   onChange: (id: string) => void;
@@ -14,15 +16,20 @@ export function AgentSelect({
   const [page, setPage] = useState(0);
   const remote = useRemote(
     useCallback(
-      (signal: AbortSignal) => api.agents(page, "DRAFT", signal),
-      [api, page],
+      (signal: AbortSignal) =>
+        api.agents(page, includeArchived ? "" : "DRAFT", signal),
+      [api, page, includeArchived],
     ),
   );
   return (
     <div>
       <Field
-        label="DRAFT agent"
-        hint="Only accessible DRAFT configurations can be selected."
+        label={includeArchived ? "Conversation agent" : "DRAFT agent"}
+        hint={
+          includeArchived
+            ? "Archived agents allow reading existing conversations only."
+            : "Only accessible DRAFT configurations can be selected."
+        }
       >
         <select
           required

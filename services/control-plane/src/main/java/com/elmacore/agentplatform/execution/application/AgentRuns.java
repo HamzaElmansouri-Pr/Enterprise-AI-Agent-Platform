@@ -47,26 +47,9 @@ public final class AgentRuns {
             transactions.execute(current,()-> {agent(tenant,agent,true);store.insert(tenant,agent,user,id,input.message());return null;});
             run=id;
             if(matches.isEmpty()) throw new RunFailure("INSUFFICIENT_KNOWLEDGE",422);
-            var passages=new ArrayList<ExecutionRuntime.Passage>();
-            var sources=new LinkedHashMap<String,RunResult.Citation>();int remaining=8000;
-            for(var match:matches) {
-                if(passages.size()==6 || remaining==0) break;
-                String text=match.text();int count=Math.min(remaining,text.codePointCount(0,text.length()));
-                text=text.substring(0,text.offsetByCodePoints(0,count));remaining-=count;
-                String source="S"+(passages.size()+1);
-                passages.add(new ExecutionRuntime.Passage(source,text));
-                sources.put(source,new RunResult.Citation(match.documentId(),match.chunkId(),match.filename(),match.sourcePage()));
-            }
-            var output=runtime.execute(new ExecutionRuntime.Request(id,correlation,config.details().systemInstructions(),input.message(),List.copyOf(passages)));
-            try {validate(output,sources.keySet());}
-            catch(RunFailure invalid) {
-                if(output!=null && ExecutionRuntime.MODEL.equals(output.modelId()) && output.usage()!=null
-                    && !invalidUsage(output.usage().inputTokens(),1000000) && !invalidUsage(output.usage().outputTokens(),800))
-                    throw new RunFailure(invalid.code(),invalid.status(),id,output.modelId(),output.usage());
-                throw invalid;
-            }
-            var citations=output.sourceIds().stream().distinct().map(sources::get).toList();
-            var result=new RunResult(id,agent,"SUCCEEDED",output.answer(),citations,output.usage(),elapsed(started),null,output.modelId());
+            var context=GroundedAnswer.prepare(matches);
+            var output=runtime.execute(new ExecutionRuntime.Request(id,correlation,config.details().systemInstructions(),input.message(),context.passages()));
+            var result=GroundedAnswer.result(id,agent,elapsed(started),output,context);
             terminal(user,tenant,agent,result);
             return result;
         } catch(RunFailure failure) {
@@ -97,13 +80,5 @@ public final class AgentRuns {
     private static void safePersistenceFailure(UUID run) {
         org.slf4j.LoggerFactory.getLogger(AgentRuns.class).error("execution_persistence_failed run_id={} correlation_id={}",run,org.slf4j.MDC.get("correlation_id"));
     }
-    static void validate(ExecutionRuntime.Response output,Set<String> allowed) {
-        if(output==null || output.answer()==null || output.answer().isBlank() || output.answer().codePointCount(0,output.answer().length())>6000
-                || output.answer().indexOf(0)>=0 || !java.nio.charset.StandardCharsets.UTF_8.newEncoder().canEncode(output.answer())
-                || output.sourceIds()==null || output.sourceIds().isEmpty() || output.sourceIds().size()>6
-                || output.sourceIds().stream().anyMatch(s->!allowed.contains(s)) || !ExecutionRuntime.MODEL.equals(output.modelId())
-                || output.usage()==null || invalidUsage(output.usage().inputTokens(),1000000) || invalidUsage(output.usage().outputTokens(),800))
-            throw new RunFailure("INVALID_MODEL_OUTPUT",502);
-    }
-    private static boolean invalidUsage(Integer n,int max){return n!=null && (n<0 || n>max);}
+    static void validate(ExecutionRuntime.Response output,Set<String> allowed){GroundedAnswer.validate(output,allowed);}
 }

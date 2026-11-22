@@ -86,7 +86,11 @@ def summarize(rows, reviews=None):
         run["usage"]
         for r in hosted
         for run in [r.get("run", {}), *r.get("auxiliaryRuns", [])]
-        if run.get("usage", {}).get("inputTokens") is not None
+        if any(v is not None for v in run.get("usage", {}).values())
+    ]
+    input_values = [u["inputTokens"] for u in usage if u.get("inputTokens") is not None]
+    output_values = [
+        u["outputTokens"] for u in usage if u.get("outputTokens") is not None
     ]
     return {
         "retrieval": retrieval(rows),
@@ -141,8 +145,10 @@ def summarize(rows, reviews=None):
         "latency": latency([r["latencyMs"] for r in rows if "latencyMs" in r]),
         "knownUsage": {
             "runs": len(usage),
-            "inputTokens": sum(u["inputTokens"] for u in usage),
-            "outputTokens": sum(u["outputTokens"] for u in usage),
+            "inputRuns": len(input_values),
+            "outputRuns": len(output_values),
+            "inputTokens": sum(input_values) if input_values else None,
+            "outputTokens": sum(output_values) if output_values else None,
         },
         "errors": {
             kind: sum(r.get("errorCategory") == kind for r in rows)

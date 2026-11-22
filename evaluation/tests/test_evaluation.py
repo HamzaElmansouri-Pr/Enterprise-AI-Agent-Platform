@@ -205,6 +205,19 @@ class MetricsTest(unittest.TestCase):
         self.assertIsNone(result["structuralCitationValidity"]["value"])
         self.assertIsNone(result["reviewCorrectness"]["value"])
 
+    def test_partial_returned_usage_keeps_unknown_direction_unknown(self):
+        row = {
+            "status": "agent-failure",
+            "evidence": "hosted",
+            "language": "en",
+            "run": {"usage": {"inputTokens": 7, "outputTokens": None}},
+        }
+        usage = summarize([row])["knownUsage"]
+        self.assertEqual(usage["inputTokens"], 7)
+        self.assertIsNone(usage["outputTokens"])
+        self.assertEqual(usage["outputRuns"], 0)
+        self.assertIsNone(summarize([])["knownUsage"]["inputTokens"])
+
     def test_abstention_denominators(self):
         reviews = [
             {

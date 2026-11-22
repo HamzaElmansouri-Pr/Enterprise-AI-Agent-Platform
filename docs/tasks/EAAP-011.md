@@ -13,7 +13,7 @@ Significant additions:
 - `evaluation/runner.py`, `__main__.py`: explicit suites/modes/case selection/attempt controls, real authorized retrieval, deliberate hosted conversation dispatch, partial/error artifacts, provenance, caps and no paid retries.
 - `evaluation/scenarios.py`, `mock_runtime.py`:24 actual boundary/history/citation invariants and16 test-only SDK invocations through the unchanged real LangGraph. No production fake-provider option.
 - `evaluation/metrics.py`, `reports.py`: document-level Recall/Hit/Precision@1/3/5, MRR, explicit denominators, language groups, latency, returned usage, separate structural/semantic evaluation, human-review rubric, compatible baseline comparison.
-- `evaluation/tests/`:47 deterministic tests for schema/integrity/Unicode, metric arithmetic, failed-case denominators, review provenance, timeout versus abstention, wrong-scope source rejection, no redirect/retry, opt-in/case/attempt caps, output preservation, truthful partial reports and redaction.
+- `evaluation/tests/`:48 deterministic tests for schema/integrity/Unicode, metric arithmetic, failed-case denominators, review provenance, timeout versus abstention, wrong-scope source rejection, no redirect/retry, opt-in/case/attempt caps, output preservation, truthful partial reports and redaction.
 - `.gitattributes`: evaluation PDF fixtures are binary (their valid PDF cross-reference records contain trailing spaces).
 - `.github/workflows/ci.yaml`: existing Python job also validates dataset, unit tests and Ruff for evaluation. Existing Java RLS/approval/replay/history gates remain enabled. No paid/real-model download is added to CI.
 - [Operations](../engineering/agent-evaluation-operations.md), ADR0010, evaluation README/schema and root/architecture/task index links.
@@ -78,7 +78,7 @@ uv run --frozen ruff check --config ../../evaluation/ruff.toml ../../evaluation
 uv run --frozen ruff format --check --config ../../evaluation/ruff.toml ../../evaluation
 ```
 
-Result:106 runtime tests passed; Ruff check/format passed for runtime and evaluation. Evaluation47 standard-library tests passed via `python3 -m unittest discover -s evaluation/tests -v`. Dataset validation passed via `python3 -m evaluation validate --dataset evaluation/datasets/core-v1`. Tests need no paid credentials; local-network runtime tests ran with appropriate sandbox access.
+Result:106 runtime tests passed; Ruff check/format passed for runtime and evaluation. Evaluation48 standard-library tests passed via `python3 -m unittest discover -s evaluation/tests -v`. Dataset validation passed via `python3 -m evaluation validate --dataset evaluation/datasets/core-v1`. Tests need no paid credentials; local-network runtime tests ran with appropriate sandbox access.
 
 From repository root with existing Node22 tooling:
 
@@ -115,7 +115,7 @@ python3 -m evaluation compare \
 
 Two earlier development attempts truthfully failed: first the initial internal-only Docker network prevented host API access before any case; second an evaluator expected INVALID_MODEL_OUTPUT while the accepted HTTP adapter deliberately reports RUNTIME_FAILURE. The lab access network and evaluator expectation were corrected; no production security boundary or accepted test was weakened. Failed artifacts remained failed, and no fake benchmark was substituted.
 
-Remote CI also exposed working-directory-dependent Ruff classification of the test runtime imports. Added evaluation/ruff.toml extending the existing rules with explicit evaluation/agent_runtime first-party identities; the same checks pass from both repository root and runtime directory. No rule was disabled. The final PR and delivery response record actual Git/CI URLs and status after pushing. A workflow definition or local result is not represented as a remote CI pass. No PR merge is performed.
+Remote CI also exposed working-directory-dependent Ruff classification of the test runtime imports. Added evaluation/ruff.toml extending the existing rules with explicit evaluation/agent_runtime first-party identities; the same checks pass from both repository root and runtime directory. No rule was disabled. Final reporting review also added a regression for independently nullable input/output usage: known directions are summed separately and absent usage remains null, including in re-rendered artifacts. No retrieval or hosted experiment was invented or repeated for that reporting-only correction. The final PR and delivery response record actual Git/CI URLs and status after pushing. A workflow definition or local result is not represented as a remote CI pass. No PR merge is performed.
 
 ## Security, performance, limitations and review
 

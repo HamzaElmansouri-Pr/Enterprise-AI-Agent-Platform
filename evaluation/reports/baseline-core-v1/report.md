@@ -453,8 +453,10 @@ Real retrieval and deterministic boundaries are separate from provider quality. 
   },
   "knownUsage": {
     "runs": 0,
-    "inputTokens": 0,
-    "outputTokens": 0
+    "inputRuns": 0,
+    "outputRuns": 0,
+    "inputTokens": null,
+    "outputTokens": null
   },
   "errors": {},
   "counts": {

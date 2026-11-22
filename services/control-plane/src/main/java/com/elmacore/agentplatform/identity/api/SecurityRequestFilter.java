@@ -27,6 +27,18 @@ public final class SecurityRequestFilter extends OncePerRequestFilter {
                 response.setHeader("Cache-Control", "no-store");
                 response.getWriter().write("{\"code\":\"internal_error\"}");
             } finally {
+                int status=response.getStatus();
+                var event=status==429?com.elmacore.agentplatform.operations.OperationalSignals.Event.RATE_LIMITED
+                    :status>=500?com.elmacore.agentplatform.operations.OperationalSignals.Event.REQUEST_FAILED
+                    :status>=400?com.elmacore.agentplatform.operations.OperationalSignals.Event.REQUEST_DENIED
+                    :com.elmacore.agentplatform.operations.OperationalSignals.Event.REQUEST_OK;
+                com.elmacore.agentplatform.operations.OperationalSignals.record(event,1);
+                String path=request.getRequestURI();
+                if(status>=400 && path.startsWith("/api/v1/tenants/")
+                    && path.contains("/tool-proposals/")
+                    && (path.endsWith("/approve") || path.endsWith("/execute")))
+                    com.elmacore.agentplatform.operations.OperationalSignals.record(
+                        com.elmacore.agentplatform.operations.OperationalSignals.Event.TOOL_FAILED,1);
                 LOG.info("request_completed correlation_id={} status={} duration_ms={}",
                         correlation, response.getStatus(), (System.nanoTime() - started) / 1_000_000);
             }

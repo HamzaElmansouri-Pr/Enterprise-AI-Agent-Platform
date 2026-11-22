@@ -1,10 +1,12 @@
-FROM python:3.12.16-slim-bookworm AS build
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS build
 WORKDIR /app
 RUN pip install --no-cache-dir uv==0.13.9
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project --python /usr/local/bin/python
 
-FROM python:3.12.16-slim-bookworm
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+ARG RELEASE_SHA=development
+LABEL org.opencontainers.image.revision=$RELEASE_SHA
 RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home app
 WORKDIR /app

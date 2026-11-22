@@ -1,0 +1,26 @@
+{
+  "packagesQueried": 91,
+  "findings": [
+    {
+      "query": {
+        "package": {
+          "ecosystem": "Maven",
+          "name": "org.springframework:spring-webmvc"
+        },
+        "version": "6.2.19"
+      },
+      "vulns": [
+        {
+          "id": "GHSA-j9f9-w8pj-32f8",
+          "modified": "2026-10-07T13:30:04.802772Z"
+        },
+        {
+          "id": "GHSA-pc63-qcmh-9cmg",
+          "modified": "2026-10-05T23:30:04.884745Z"
+        }
+      ]
+    }
+  ],
+  "checkedAt": "2026-11-22",
+  "disposition": "Remaining Spring MVC alerts require unused SSE/XSLT rendering; see operational threat model. Not patched."
+}

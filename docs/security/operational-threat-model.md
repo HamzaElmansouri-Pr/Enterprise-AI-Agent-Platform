@@ -1,0 +1,43 @@
+# Operational threat model — EAAP-012
+
+Review scope: accepted EAAP-000–011 plus the opt-in pilot and encrypted logical recovery. This is an engineering assessment pending independent review, not penetration-test certification.
+
+| Asset / boundary | Threat | Control and verification | Residual risk / owner |
+| --- | --- | --- | --- |
+| Browser → ingress | Credential sniffing, framing, injected scripts | HTTPS only; TLS 1.2/1.3; HSTS, CSP, nosniff, no-referrer, DENY; same-origin `/api/v1`; no source maps | Operator supplies real CA/DNS/renewal; local rehearsal uses explicit self-signed CA |
+| Browser token | XSS, token replay | Existing in-memory token, short 900s lifetime, current enabled-user/membership checks; no proxy cookies/access-body logs | Browser compromise remains possible; JWT rotation invalidates sessions |
+| User → tenant API | IDOR, stale role, cross-tenant reads | Trusted Java authorization/current membership and ownership; accepted integration tests; drill unauthorized UUID 403 | GUCs trust application SQL; SQL injection/assertion compromise not solved by RLS |
+| Runtime → business actions | Prompt injection, approval bypass | Existing Tool Gateway, strict schema, current OWNER/ADMIN, different approver, digest binding, transaction/idempotent execution | Shared host/network secret compromise; no autonomous shell/network tool |
+| Ingress → internal services | Direct runtime/DB/management exposure | Only web TLS port published; private API/runtime/data networks; internal paths denied | Docker host/root/operator can reach services; internal plaintext is not mTLS |
+| Internal HTTP | Impersonation/replay | Separate random embedding/execution secrets, constant-time checks, fixed endpoints, deadlines | No cryptographic workload identity or internal encryption; future decision for multi-host |
+| Host/container | Privilege escalation, disk/memory exhaustion | Nonroot, read-only roots, bounded tmpfs, ALL capdrop, no-new-privileges, CPU/memory/concurrency/body/time limits | Host kernel/Docker admin trusted; single host is a failure domain |
+| Secret files | Repository/image/env/log disclosure | External protected mounts, pilot startup checks, no env fallback, no Docker socket; private diagnostics | Compose file secrets unencrypted at rest; child process env/bootstrap and host memory privileged |
+| PostgreSQL roles | Runtime DDL/superuser/RLS bypass | Three dedicated nonsuperuser/nonbypass/nonmember roles; 15 tenant tables forced RLS; narrow identity functions | Global users/memberships intentionally use narrow capabilities rather than RLS; admin bypass is privileged |
+| Knowledge/prompts/history | Content exfiltration, unsafe telemetry | Existing tenant/creator access, untrusted retrieval, bounded input/context; no body logs or metric IDs | DB/admin/backups contain private content; controlled hosted provider gets bounded selected context |
+| Backup bytes | Theft, tampering, wrong key, truncated copy | CMS authenticated AES-GCM/RSA-OAEP; offline key; full authentication and digest before restore; atomic exclusive publication | Recipient public key is not sender identity; trusted storage/provenance needed |
+| Restore target | Accidental overwrite, malicious archive, wrong versions | Explicit separate cluster/project, empty target, exact PG/vector/V8, apps stopped, one transaction, no clean/drop option | Admin restore executes archive SQL; only authorized trusted archives allowed; interrupted target must be inspected |
+| Operational telemetry | Secrets/content, unbounded labels | Fixed counters, private authenticated diagnostics, bounded durations/safe codes, access logs disabled | Host logs still privileged; retention/export review needed; counters reset on restart |
+| Release supply chain | Mutable bases, dependency exploit, dirty builds | Accepted exact dependency locks; pinned PG/Nginx digests; immutable application lock + revision; existing CI retained | Pilot Java/Python/Node/Nginx and PostgreSQL bases are digest-pinned at the accepted versions; installed OS packages, host tooling and image provenance still require review |
+
+## Findings and disposition
+
+- **High, fixed in pilot:** developer preview serving/no TLS and separately reachable application ports are unsuitable for pilot ingress. Dedicated Nginx TLS profile exposes only HTTPS.
+- **High, fixed in pilot:** absent verified encrypted backup/recovery leaves durable business data without a tested recovery path. Authenticated export and independent restore are implemented; rehearsal evidence is required before acceptance.
+- **Medium, mitigated:** file secrets and private networks reduce accidental disclosure, but no host compromise protection, mTLS, managed vault or key escrow is claimed. Operator owns host hardening/off-host custody.
+- **Medium, retained limitation:** tenant RLS depends on trusted transaction GUC assertions. Arbitrary SQL executing as application remains dangerous; parameterized adapters and trusted authorization remain essential.
+- **Medium, deployment gate:** real TLS chain/DNS/firewall, patch cadence, dependency/base-image vulnerability review and backup custody must be approved before real pilot exposure. Local test TLS is not production approval.
+- **Low:** counters are process-local and reset, logs are text fields rather than a centralized telemetry product. No security SaaS/monitoring stack is introduced.
+
+No new business capability, database schema or migration V9 is needed. Remaining architecture decisions: multi-host workload identity/internal TLS, managed secret custody, backup off-host scheduling/storage/restore ownership, production RPO/RTO and jurisdiction-specific retention. These are not silently represented as approved or implemented.
+
+See [operations](../engineering/pilot-deployment-operations.md), [recovery](../engineering/backup-and-disaster-recovery.md), [privacy](data-retention-and-privacy.md) and [test evidence](../tasks/EAAP-012.md).
+
+## Dependency advisory review (2026-11-22)
+
+Review of all 91 resolved Maven runtime coordinates found affected Jackson 2.21.4, Tomcat 10.1.55, JDBC 42.7.11 and Log4j API 2.24.3. Targeted managed overrides move to Jackson BOM 2.21.7, Tomcat 10.1.59, JDBC 42.7.12 and Log4j2 2.25.5. These preserve Boot 3.5/Java 21 and existing APIs. They address reported parser/HTTP/driver/log encoding issues; this is not a framework-major migration. See [Jackson maintainer advisory](https://github.com/FasterXML/jackson-core/security/advisories/GHSA-7hhh-6rmp-j9qf), [Tomcat security](https://tomcat.apache.org/security-10.html), [JDBC maintainer advisory](https://github.com/pgjdbc/pgjdbc/security/advisories/GHSA-j92g-9f8w-j867) and [Log4j API advisory](https://github.com/advisories/GHSA-qv9r-c865-cp47).
+
+Two Spring MVC package alerts remain on the approved Spring Framework 6.2.19: [CVE-2026-47890](https://spring.io/security/cve-2026-47890/) requires SSE view fragments; [CVE-2026-47884](https://spring.io/security/cve-2026-47884/) requires XsltView rendering with an implicit wildcard view mapping. Repository inspection finds neither feature, no XSLT/view resolver or SSE rendering, and controllers return REST response bodies. We assess these conditions as currently unreachable, **not patched**. The maintainer rates them LOW and MEDIUM respectively; OSV/GitHub package severity differs. Adding either rendering capability requires renewed security review. An OSS Spring 7 migration or paid 6.2 enterprise patch needs explicit architectural/commercial approval and is excluded here. This support-path decision remains outstanding for real pilot approval; no purchase or major upgrade is performed.
+
+The npm lock audit and pip-audit of 61 resolved production Python packages reported no known vulnerabilities at this review. That result is time-specific, not a guarantee. Base images are reviewed/pinned, but a comprehensive OS-package image scan/host penetration test is not claimed. Recheck advisories and OS packages before real exposure and on the operator's patch cadence.
+
+Proxy availability tradeoff: forwarded headers are deliberately discarded and Spring ignores them. The inherited single-process login limiter therefore sees the web container address: its5-attempts/minute/address budget is shared by pilot users (with a20/minute global cap and2 hash slots). This is a material small-pilot capacity/availability limit and a potential shared-budget DoS. It is not silently raised or replaced; a trusted-proxy/client-address and abuse-control policy needs architectural/security approval before broader exposure. Authenticated user/tenant limits retain their existing identity-based behavior.

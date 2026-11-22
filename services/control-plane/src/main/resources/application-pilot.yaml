@@ -1,0 +1,26 @@
+spring:
+  config:
+    import: configtree:/run/secrets/
+server:
+  forward-headers-strategy: none
+management:
+  server:
+    port: 9090
+  endpoints:
+    web:
+      exposure:
+        include: health,pilot
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,pilotDatabase
+        liveness:
+          include: livenessState
+logging:
+  level:
+    root: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd''T''HH:mm:ss.SSSXXX} severity=%level service=control-plane %msg%n'

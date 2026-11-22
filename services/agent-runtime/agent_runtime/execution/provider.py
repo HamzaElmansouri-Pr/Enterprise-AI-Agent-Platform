@@ -15,6 +15,7 @@ from agent_runtime.execution.contracts import (
     ExecutionFailure,
     Usage,
 )
+from agent_runtime.operations import secret
 from agent_runtime.proposals.contracts import ProposalCompletion, ToolProposal
 
 _CompletionT = TypeVar("_CompletionT", Completion, ProposalCompletion)
@@ -31,7 +32,7 @@ class Provider(Protocol):
 
 class OpenAIProvider:
     def __init__(self):
-        self.key = os.environ.get("OPENAI_API_KEY", "")
+        self.key = secret("OPENAI_API_KEY")
         self.model = os.environ.get("EXECUTION_MODEL", "")
         try:
             self.tokens = int(os.environ.get("EXECUTION_MAX_OUTPUT_TOKENS", "800"))

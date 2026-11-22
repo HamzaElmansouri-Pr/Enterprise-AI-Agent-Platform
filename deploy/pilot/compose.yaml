@@ -1,0 +1,138 @@
+# Standalone opt-in profile. Use only through the reviewed operator CLI/preflight.
+services:
+  web:
+    image: ${PILOT_WEB_IMAGE:?Lock a reviewed image}
+    user: '10001:10001'
+    read_only: true
+    tmpfs: ['/tmp:uid=10001,gid=10001,mode=0700,size=32m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.5
+    ports: ['${PILOT_BIND:-127.0.0.1}:${PILOT_PORT:?Select HTTPS port}:8443']
+    networks: [ingress, api]
+    secrets: [tls.crt, tls.key]
+    healthcheck:
+      test: [CMD-SHELL, 'wget --quiet --spider --no-check-certificate https://127.0.0.1:8443/']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    depends_on:
+      control-plane:
+        condition: service_started
+  control-plane:
+    image: ${PILOT_CONTROL_PLANE_IMAGE:?Lock a reviewed image}
+    user: '10001:10001'
+    read_only: true
+    tmpfs: ['/tmp:uid=10001,gid=10001,mode=0700,size=128m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 1
+    environment:
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+      SPRING_PROFILES_ACTIVE: pilot
+      EAAP_DEPLOYMENT_MODE: pilot
+      EAAP_RELEASE_SHA: ${PILOT_RELEASE_SHA:?Record source commit}
+      DB_URL: jdbc:postgresql://postgres:5432/eaap_pilot
+      AUTH_PRIVATE_KEY: file:/run/secrets/jwt-private.pem
+      AUTH_PUBLIC_KEY: file:/run/secrets/jwt-public.pem
+      AUTH_ISSUER: ${PILOT_ISSUER:?Set HTTPS issuer}
+      AUTH_AUDIENCE: ${PILOT_AUDIENCE:?Set audience}
+      AUTH_KEY_ID: ${PILOT_KEY_ID:?Set key identifier}
+      KNOWLEDGE_WORKER_ENABLED: 'true'
+      EMBEDDING_URL: http://agent-runtime:8000
+      EXECUTION_RUNTIME_URL: http://agent-runtime:8000
+    secrets: [DB_PASSWORD, EMBEDDING_SECRET, EXECUTION_INTERNAL_SECRET, OPERATIONS_SECRET, jwt-private.pem, jwt-public.pem]
+    networks: [api, runtime, data]
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, 'http://127.0.0.1:9090/actuator/health/readiness']
+      interval: 10s
+      timeout: 5s
+      retries: 9
+      start_period: 30s
+  agent-runtime:
+    image: ${PILOT_RUNTIME_IMAGE:?Lock a reviewed image}
+    user: '10001:10001'
+    read_only: true
+    tmpfs: ['/tmp:uid=10001,gid=10001,mode=0700,size=128m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    mem_limit: 1536m
+    cpus: 1
+    environment:
+      APP_ENV: pilot
+      EAAP_DEPLOYMENT_MODE: pilot
+      EAAP_RELEASE_SHA: ${PILOT_RELEASE_SHA:?Record source commit}
+      EAAP_PROVIDER_MODE: disabled
+      EMBEDDING_SECRET_FILE: /run/secrets/EMBEDDING_SECRET
+      EXECUTION_INTERNAL_SECRET_FILE: /run/secrets/EXECUTION_INTERNAL_SECRET
+      EMBEDDING_MODEL_DIR: /models/e5-small
+      HF_HUB_OFFLINE: '1'
+      HOME: /tmp
+    secrets: [EMBEDDING_SECRET, EXECUTION_INTERNAL_SECRET]
+    networks: [runtime]
+    volumes: ['${PILOT_MODEL_DIR:?Prepare fixed local assets}:/models/e5-small:ro']
+    command: [uvicorn, 'agent_runtime.main:app', --host, 0.0.0.0, --port, '8000', --no-server-header, --no-proxy-headers, --no-access-log, --limit-concurrency, '8', --backlog, '16']
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready',timeout=3).close()"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+      start_period: 15s
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg17-trixie@sha256:89947206f52eac3a9df9b663df7e76987cbdc623be6576b3a524953d568700d7
+    user: postgres
+    command: [postgres, -c, log_statement=none, -c, log_error_verbosity=terse, -c, log_min_error_statement=panic]
+    group_add: ['10001']
+    read_only: true
+    tmpfs: ['/tmp:uid=999,gid=999,mode=0700,size=64m', '/var/run/postgresql:uid=999,gid=999,mode=0770,size=16m']
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+    shm_size: 128m
+    environment:
+      POSTGRES_DB: eaap_pilot
+      POSTGRES_USER: eaap_dev
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      DB_PASSWORD_FILE: /run/secrets/DB_PASSWORD
+      MIGRATION_DB_PASSWORD_FILE: /run/secrets/MIGRATION_DB_PASSWORD
+      IDENTITY_OPERATOR_DB_PASSWORD_FILE: /run/secrets/IDENTITY_OPERATOR_DB_PASSWORD
+    secrets: [POSTGRES_PASSWORD, DB_PASSWORD, MIGRATION_DB_PASSWORD, IDENTITY_OPERATOR_DB_PASSWORD]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../../infrastructure/docker/postgres/bootstrap.sh:/docker-entrypoint-initdb.d/10-platform-roles.sh:ro
+      - ../../infrastructure/docker/postgres/bootstrap.sql:/opt/eaap/bootstrap.sql:ro
+      - ../../infrastructure/docker/postgres/knowledge-extension.sql:/opt/eaap/knowledge-extension.sql:ro
+    networks: [data]
+    healthcheck:
+      # The entrypoint's temporary bootstrap server accepts Unix sockets only.
+      # TCP readiness waits until initialization has finished and the final server runs.
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, eaap_dev, -d, eaap_pilot]
+      interval: 5s
+      timeout: 3s
+      retries: 9
+networks:
+  ingress: {}
+  api: {internal: true}
+  runtime: {internal: true}
+  data: {internal: true}
+volumes:
+  postgres-data: {}
+secrets:
+  POSTGRES_PASSWORD: {file: '${PILOT_SECRET_DIR}/POSTGRES_PASSWORD'}
+  DB_PASSWORD: {file: '${PILOT_SECRET_DIR}/DB_PASSWORD'}
+  MIGRATION_DB_PASSWORD: {file: '${PILOT_SECRET_DIR}/MIGRATION_DB_PASSWORD'}
+  IDENTITY_OPERATOR_DB_PASSWORD: {file: '${PILOT_SECRET_DIR}/IDENTITY_OPERATOR_DB_PASSWORD'}
+  EMBEDDING_SECRET: {file: '${PILOT_SECRET_DIR}/EMBEDDING_SECRET'}
+  EXECUTION_INTERNAL_SECRET: {file: '${PILOT_SECRET_DIR}/EXECUTION_INTERNAL_SECRET'}
+  OPERATIONS_SECRET: {file: '${PILOT_SECRET_DIR}/OPERATIONS_SECRET'}
+  jwt-private.pem: {file: '${PILOT_SECRET_DIR}/jwt-private.pem'}
+  jwt-public.pem: {file: '${PILOT_SECRET_DIR}/jwt-public.pem'}
+  tls.crt: {file: '${PILOT_SECRET_DIR}/tls.crt'}
+  tls.key: {file: '${PILOT_SECRET_DIR}/tls.key'}

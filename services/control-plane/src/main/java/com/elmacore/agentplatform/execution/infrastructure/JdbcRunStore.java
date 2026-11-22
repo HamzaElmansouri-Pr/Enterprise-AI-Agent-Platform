@@ -56,16 +56,21 @@ public final class JdbcRunStore implements RunStore {
         if(updated) org.slf4j.LoggerFactory.getLogger(JdbcRunStore.class).info(
             "execution_terminal run_id={} correlation_id={} status={} model={} duration_ms={} input_tokens={} output_tokens={} failure_code={}",
             result.runId(),org.slf4j.MDC.get("correlation_id"),result.status(),result.modelId(),result.durationMs(),result.usage().inputTokens(),result.usage().outputTokens(),result.failureCode());
+        if(updated) com.elmacore.agentplatform.operations.OperationalSignals.committed(
+            result.status().equals("SUCCEEDED")?com.elmacore.agentplatform.operations.OperationalSignals.Event.EXECUTION_SUCCEEDED
+                :com.elmacore.agentplatform.operations.OperationalSignals.Event.EXECUTION_FAILED,1);
         return updated;
     }
     @Override public void recover(UUID tenant,UUID agent,UUID user) {
         transaction();
-        jdbc.update("""
+        int recovered=jdbc.update("""
             UPDATE platform.agent_runs SET status='FAILED',failure_code='EXECUTION_INTERRUPTED',
               duration_ms=GREATEST(0,(EXTRACT(EPOCH FROM (clock_timestamp()-created_at))*1000)::bigint),
               completed_at=GREATEST(clock_timestamp(),created_at)
             WHERE tenant_id=? AND agent_id=? AND user_id=? AND status='RUNNING'
               AND created_at<=clock_timestamp()-interval '180 seconds'
             """,tenant,agent,user);
+        com.elmacore.agentplatform.operations.OperationalSignals.committed(
+            com.elmacore.agentplatform.operations.OperationalSignals.Event.EXECUTION_RECOVERED,recovered);
     }
 }

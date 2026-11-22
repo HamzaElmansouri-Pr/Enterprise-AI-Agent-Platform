@@ -84,7 +84,9 @@ public final class JdbcKnowledgeStore implements KnowledgeStore {
         if(changed!=1) throw new KnowledgeFailure("job_lease_lost",409);
     }
     @Override public void failed(UUID tenant,UUID document,String code) {
-        transaction();jdbc.update("UPDATE platform.knowledge_documents SET status='FAILED',chunk_count=0,claim_token=NULL,lease_until=NULL,failure_code=?,updated_at=clock_timestamp() WHERE tenant_id=? AND id=? AND status='PROCESSING'",code,tenant,document);
+        transaction();int changed=jdbc.update("UPDATE platform.knowledge_documents SET status='FAILED',chunk_count=0,claim_token=NULL,lease_until=NULL,failure_code=?,updated_at=clock_timestamp() WHERE tenant_id=? AND id=? AND status='PROCESSING'",code,tenant,document);
+        com.elmacore.agentplatform.operations.OperationalSignals.committed(
+            com.elmacore.agentplatform.operations.OperationalSignals.Event.KNOWLEDGE_FAILED,changed);
     }
     @Override public List<Match> search(UUID tenant,UUID agent,EmbeddingVector vector,int topK) {
         transaction();return jdbc.query("""

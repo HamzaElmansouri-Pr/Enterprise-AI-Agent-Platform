@@ -8,6 +8,7 @@ from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from agent_runtime.embedding.model import MODEL_ID, LocalEmbeddings
+from agent_runtime.operations import record, secret
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ class Batch(BaseModel):
 
 class EmbeddingService:
     def __init__(self):
-        self.secret = os.environ.get("EMBEDDING_SECRET", "")
+        self.secret = secret("EMBEDDING_SECRET")
         if self.secret and (
             len(self.secret) < 32
             or len(self.secret) > 128
@@ -73,6 +74,7 @@ async def embeddings(request: Request, x_embedding_secret: str = Header(default=
             raise ValueError("Invalid embeddings")
         return {"modelId": MODEL_ID, "dimension": 384, "vectors": vectors}
     except Exception:
+        record("embedding_failed")
         raise HTTPException(503, "embedding_unavailable") from None
     finally:
         service.lock.release()

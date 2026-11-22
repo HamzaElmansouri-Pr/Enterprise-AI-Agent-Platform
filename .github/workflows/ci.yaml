@@ -66,6 +66,16 @@ jobs:
         run: |
           uv run --locked ruff check --config ../../evaluation/ruff.toml ../../evaluation
           uv run --locked ruff format --check --config ../../evaluation/ruff.toml ../../evaluation
+      - name: Validate pilot configuration and authenticated backup controls
+        working-directory: .
+        run: |
+          docker compose version
+          python -m unittest discover -s deploy/tests -v
+          python -m deploy.scripts.check
+      - name: Lint pilot operator tooling
+        run: |
+          uv run --locked ruff check --config ../../deploy/ruff.toml ../../deploy
+          uv run --locked ruff format --check --config ../../deploy/ruff.toml ../../deploy
 
   web:
     name: Frontend lint, types, tests, and build

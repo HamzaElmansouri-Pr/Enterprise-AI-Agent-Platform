@@ -22,8 +22,8 @@ python3 -m unittest discover -s evaluation/tests -v
 Use the existing runtime tooling for evaluation lint/format from services/agent-runtime:
 
 ```bash
-uv run --frozen ruff check --config pyproject.toml ../../evaluation
-uv run --frozen ruff format --check --config pyproject.toml ../../evaluation
+uv run --frozen ruff check --config ../../evaluation/ruff.toml ../../evaluation
+uv run --frozen ruff format --check --config ../../evaluation/ruff.toml ../../evaluation
 ```
 
 ## Offline experiments

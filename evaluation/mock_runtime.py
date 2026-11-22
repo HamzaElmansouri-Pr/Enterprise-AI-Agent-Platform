@@ -9,9 +9,10 @@ import json
 from pathlib import Path
 
 import httpx
+from openai import AsyncOpenAI
+
 from agent_runtime.execution import provider
 from agent_runtime.main import app  # noqa: F401
-from openai import AsyncOpenAI
 
 proof = []
 

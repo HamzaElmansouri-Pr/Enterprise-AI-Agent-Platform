@@ -1,0 +1,5 @@
+# Keep import classification stable from the repository root and runtime directory.
+extend = "../services/agent-runtime/pyproject.toml"
+
+[lint.isort]
+known-first-party = ["evaluation", "agent_runtime"]

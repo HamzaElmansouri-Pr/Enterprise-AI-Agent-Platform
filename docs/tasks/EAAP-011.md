@@ -74,8 +74,8 @@ From services/agent-runtime, using existing uv/cache setup:
 uv run --frozen ruff check .
 uv run --frozen ruff format --check .
 uv run --frozen pytest
-uv run --frozen ruff check --config pyproject.toml ../../evaluation
-uv run --frozen ruff format --check --config pyproject.toml ../../evaluation
+uv run --frozen ruff check --config ../../evaluation/ruff.toml ../../evaluation
+uv run --frozen ruff format --check --config ../../evaluation/ruff.toml ../../evaluation
 ```
 
 Result:106 runtime tests passed; Ruff check/format passed for runtime and evaluation. Evaluation47 standard-library tests passed via `python3 -m unittest discover -s evaluation/tests -v`. Dataset validation passed via `python3 -m evaluation validate --dataset evaluation/datasets/core-v1`. Tests need no paid credentials; local-network runtime tests ran with appropriate sandbox access.
@@ -115,7 +115,7 @@ python3 -m evaluation compare \
 
 Two earlier development attempts truthfully failed: first the initial internal-only Docker network prevented host API access before any case; second an evaluator expected INVALID_MODEL_OUTPUT while the accepted HTTP adapter deliberately reports RUNTIME_FAILURE. The lab access network and evaluator expectation were corrected; no production security boundary or accepted test was weakened. Failed artifacts remained failed, and no fake benchmark was substituted.
 
-The final PR and delivery response record actual Git/CI URLs and status after pushing. A workflow definition or local result is not represented as a remote CI pass. No PR merge is performed.
+Remote CI also exposed working-directory-dependent Ruff classification of the test runtime imports. Added evaluation/ruff.toml extending the existing rules with explicit evaluation/agent_runtime first-party identities; the same checks pass from both repository root and runtime directory. No rule was disabled. The final PR and delivery response record actual Git/CI URLs and status after pushing. A workflow definition or local result is not represented as a remote CI pass. No PR merge is performed.
 
 ## Security, performance, limitations and review
 

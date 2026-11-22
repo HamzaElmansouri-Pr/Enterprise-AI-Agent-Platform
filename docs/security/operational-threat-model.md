@@ -32,7 +32,7 @@ No new business capability, database schema or migration V9 is needed. Remaining
 
 See [operations](../engineering/pilot-deployment-operations.md), [recovery](../engineering/backup-and-disaster-recovery.md), [privacy](data-retention-and-privacy.md) and [test evidence](../tasks/EAAP-012.md).
 
-## Dependency advisory review (2026-11-22)
+## Historical EAAP-012 dependency advisory review (2026-11-22)
 
 Review of all 91 resolved Maven runtime coordinates found affected Jackson 2.21.4, Tomcat 10.1.55, JDBC 42.7.11 and Log4j API 2.24.3. Targeted managed overrides move to Jackson BOM 2.21.7, Tomcat 10.1.59, JDBC 42.7.12 and Log4j2 2.25.5. These preserve Boot 3.5/Java 21 and existing APIs. They address reported parser/HTTP/driver/log encoding issues; this is not a framework-major migration. See [Jackson maintainer advisory](https://github.com/FasterXML/jackson-core/security/advisories/GHSA-7hhh-6rmp-j9qf), [Tomcat security](https://tomcat.apache.org/security-10.html), [JDBC maintainer advisory](https://github.com/pgjdbc/pgjdbc/security/advisories/GHSA-j92g-9f8w-j867) and [Log4j API advisory](https://github.com/advisories/GHSA-qv9r-c865-cp47).
 
@@ -41,3 +41,11 @@ Two Spring MVC package alerts remain on the approved Spring Framework 6.2.19: [C
 The npm lock audit and pip-audit of 61 resolved production Python packages reported no known vulnerabilities at this review. That result is time-specific, not a guarantee. Base images are reviewed/pinned, but a comprehensive OS-package image scan/host penetration test is not claimed. Recheck advisories and OS packages before real exposure and on the operator's patch cadence.
 
 Proxy availability tradeoff: forwarded headers are deliberately discarded and Spring ignores them. The inherited single-process login limiter therefore sees the web container address: its5-attempts/minute/address budget is shared by pilot users (with a20/minute global cap and2 hash slots). This is a material small-pilot capacity/availability limit and a potential shared-budget DoS. It is not silently raised or replaced; a trusted-proxy/client-address and abuse-control policy needs architectural/security approval before broader exposure. Authenticated user/tenant limits retain their existing identity-based behavior.
+
+## EAAP-013 current disposition
+
+[ADR0012](../architecture/decisions/0012-identity-ingress-and-supported-spring.md) supersedes the historical Spring-support and shared-login findings above. Boot4.2.0/Framework7.1.0 are selected from current official stable/free-OSS support metadata, through2027-12-31. Runtime dependency versions and advisory conditions are recorded in [EAAP-013](../tasks/EAAP-013.md). Older6.2 advisory absence of reachability was a mitigation, not a support entitlement or patch; migration now moves beyond those affected ranges.
+
+Nginx owns actual TCP-peer login buckets; Spring keeps the20/minute global cap, two verification operations and one active keyed-normalized identity per operation. The accidental proxy-wide five-login quota is removed. Forwarding headers remain untrusted, private networks/operations remain, and no backend origin channel is introduced. The new identity guard has no post-attempt account cooldown. Shared NAT peers still contend intentionally; distributed attackers can exhaust global admission and race a legitimate identity. Process-local state resets on restart. No distributed limiter or DDoS guarantee is claimed. Invitation acceptance's independent inherited proxy-peer quota remains a capacity limitation.
+
+A later CDN/proxy requires an allowlisted upstream trust decision. Host/Docker compromise, internal plaintext, GUC assertions, backup provenance, secret custody, retention, real TLS/host approval and paid-model quality retain their existing limitations. The rehearsal uses only synthetic data, actual TLS/TCP sockets, real local embeddings and independent restore; no external-target scan or production exposure is authorized.

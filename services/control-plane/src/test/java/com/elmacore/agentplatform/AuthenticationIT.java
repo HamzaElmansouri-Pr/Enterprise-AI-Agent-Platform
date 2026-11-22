@@ -4,7 +4,7 @@ import com.elmacore.agentplatform.identity.api.LoginProtection;
 import com.elmacore.agentplatform.identity.domain.Email;
 import com.elmacore.agentplatform.identity.infrastructure.*;
 import com.elmacore.agentplatform.identity.application.MembershipAuthorization;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jwt.*;
@@ -14,16 +14,16 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.*;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.context.WebServerApplicationContext;
+import org.springframework.boot.web.server.context.WebServerApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.*;
 import org.springframework.test.web.servlet.*;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import org.testcontainers.utility.*;
 import java.nio.file.*;
@@ -60,7 +60,7 @@ class AuthenticationIT {
     private static final String ISSUER = "https://test.example/identity";
     private static final String AUDIENCE = "test-control-plane";
     private static final MutableClock CLOCK = new MutableClock();
-    @Container static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>(
+    @Container static final PostgreSQLContainer DB = new PostgreSQLContainer(
             DockerImageName.parse("pgvector/pgvector:0.8.7-pg17-trixie").asCompatibleSubstituteFor("postgres"))
             .withDatabaseName("eaap_auth_test").withUsername("bootstrap_test").withPassword(UUID.randomUUID().toString())
             .withEnv("POSTGRES_USER", "bootstrap_test").withEnv("POSTGRES_DB", "eaap_auth_test")
@@ -153,8 +153,21 @@ class AuthenticationIT {
         }
     }
     @Test void limiterBoundsAttemptsAndExpiresItsWindow() throws Exception {
-        for (int i = 0; i < 5; i++) login("unknown@example.com", PASSWORD).andExpect(status().isUnauthorized());
+        for (int i = 0; i < 20; i++) login("unknown@example.com", PASSWORD).andExpect(status().isUnauthorized());
         login("user@example.com", PASSWORD).andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After", "60"));
+        CLOCK.advance(); login("user@example.com", PASSWORD).andExpect(status().isOk());
+    }
+    @Test void oneProxyPeerSupportsMoreThanFiveLegitimateLoginsAndHeadersCannotResetGlobalBudget() throws Exception {
+        for (int n=0;n<6;n++) login("user@example.com", PASSWORD).andExpect(status().isOk());
+        for (int n=0;n<14;n++) {
+            mvc.perform(post("/api/v1/auth/login").contentType("application/json").content("{}")
+                .header("X-Forwarded-For", "203.0.113."+n).header("X-Real-IP", "198.51.100."+n)
+                .header("Forwarded", "for=192.0.2."+n+";proto=https")
+                .header("X-Forwarded-Host", "spoof.example").header("X-Forwarded-Proto", "https")
+                .header("X-Client-Identity", UUID.randomUUID())).andExpect(status().isBadRequest());
+        }
+        login("user@example.com", PASSWORD).andExpect(status().isTooManyRequests())
+            .andExpect(header().string("X-Login-Limit", "application"));
         CLOCK.advance(); login("user@example.com", PASSWORD).andExpect(status().isOk());
     }
     @Test void authenticMemberAccessesBothTenantsAndRolesComeFromDatabase() throws Exception {

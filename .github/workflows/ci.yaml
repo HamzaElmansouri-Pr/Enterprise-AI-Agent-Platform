@@ -72,6 +72,9 @@ jobs:
           docker compose version
           python -m unittest discover -s deploy/tests -v
           python -m deploy.scripts.check
+      - name: Verify real Nginx TCP peer buckets and stripped spoofed headers
+        working-directory: .
+        run: python -m deploy.scripts.ingress_smoke
       - name: Lint pilot operator tooling
         run: |
           uv run --locked ruff check --config ../../deploy/ruff.toml ../../deploy

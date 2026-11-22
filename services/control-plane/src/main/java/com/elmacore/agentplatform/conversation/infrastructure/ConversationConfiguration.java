@@ -5,7 +5,7 @@ import com.elmacore.agentplatform.execution.application.*;
 import com.elmacore.agentplatform.identity.application.MembershipAuthorization;
 import com.elmacore.agentplatform.knowledge.application.Knowledge;
 import com.elmacore.agentplatform.tenancy.application.TenantTransactions;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import javax.sql.DataSource;
 import org.springframework.context.annotation.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;

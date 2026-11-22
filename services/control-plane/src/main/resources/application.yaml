@@ -4,12 +4,6 @@ spring:
       max-file-size: 2097152B
       max-request-size: 2113536B
       file-size-threshold: 0B
-  jackson:
-    deserialization:
-      fail-on-unknown-properties: true
-      fail-on-trailing-tokens: true
-    parser:
-      strict-duplicate-detection: true
   application:
     name: control-plane
   datasource:
@@ -61,6 +55,8 @@ management:
         enabled: false
   endpoint:
     health:
+      probes:
+        enabled: false
       show-details: never
       show-components: never
 

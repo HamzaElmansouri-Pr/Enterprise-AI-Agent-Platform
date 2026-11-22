@@ -2,7 +2,10 @@ spring:
   config:
     import: configtree:/run/secrets/
 server:
-  forward-headers-strategy: none
+  request:
+    header:
+      forwarded:
+        strategy: none
 management:
   server:
     port: 9090

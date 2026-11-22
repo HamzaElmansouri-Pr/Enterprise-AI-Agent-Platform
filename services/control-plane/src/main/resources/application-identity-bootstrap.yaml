@@ -4,8 +4,8 @@ spring:
     web-application-type: none
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
   datasource:
     username: eaap_identity_operator
     password: ${IDENTITY_OPERATOR_DB_PASSWORD}

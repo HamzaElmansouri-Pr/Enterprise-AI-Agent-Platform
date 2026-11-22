@@ -1,7 +1,7 @@
 package com.elmacore.agentplatform.identity.api;
 
 import com.elmacore.agentplatform.identity.application.IdentityFailure;
-import com.fasterxml.jackson.core.JacksonException;
+import tools.jackson.core.JacksonException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.CacheControl;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,7 +23,7 @@ public class IdentityErrors {
             case UNAVAILABLE -> "authentication_unavailable"; case LIMITED -> "too_many_attempts";
         };
         var response = ResponseEntity.status(status).cacheControl(CacheControl.noStore());
-        if (status == 429) response.header("Retry-After", "60");
+        if (status == 429) response.header("Retry-After", "60").header("X-Login-Limit", "application");
         return response.body(new Error(code));
     }
     @ExceptionHandler({IllegalArgumentException.class, JacksonException.class, MethodArgumentTypeMismatchException.class})

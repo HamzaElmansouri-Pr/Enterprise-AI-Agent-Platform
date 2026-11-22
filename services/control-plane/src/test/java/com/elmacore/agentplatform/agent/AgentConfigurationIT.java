@@ -9,8 +9,8 @@ import com.elmacore.agentplatform.identity.infrastructure.ArgonPasswords;
 import com.elmacore.agentplatform.identity.infrastructure.JwtTokens;
 import com.elmacore.agentplatform.infrastructure.persistence.PostgresTenantContext;
 import com.elmacore.agentplatform.tenancy.application.TenantTransactions;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
@@ -37,7 +37,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import javax.sql.DataSource;
@@ -63,7 +63,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(AgentSqlProbe.Configuration.class)
 class AgentConfigurationIT {
-    @Container static final PostgreSQLContainer<?> DB = AgentTestDatabase.container();
+    @Container static final PostgreSQLContainer DB = AgentTestDatabase.container();
     @DynamicPropertySource static void properties(DynamicPropertyRegistry properties) { configure(DB, properties); }
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;

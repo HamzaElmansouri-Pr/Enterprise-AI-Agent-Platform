@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.conversation.api;
 import com.elmacore.agentplatform.conversation.application.Conversations;
 import com.elmacore.agentplatform.conversation.domain.ConversationRecords.*;
 import com.elmacore.agentplatform.execution.domain.RunFailure;
-import com.fasterxml.jackson.databind.*;
+import tools.jackson.databind.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +19,7 @@ public class ConversationController {
  public ConversationController(Conversations conversations,ObjectMapper mapper){this.conversations=conversations;this.mapper=mapper;}
  private UUID actor(Jwt jwt){return UUID.fromString(jwt.getSubject());}
  private void query(HttpServletRequest r,String...allowed){var names=Set.of(allowed);for(var e:r.getParameterMap().entrySet())if(!names.contains(e.getKey())||e.getValue().length!=1)throw new IllegalArgumentException("Invalid conversation query");}
- private JsonNode body(HttpServletRequest r,String...fields)throws IOException{query(r);byte[] bytes=r.getInputStream().readNBytes(16385);if(bytes.length>16384)throw new IllegalArgumentException("Conversation body too large");try{var json=mapper.readTree(bytes);if(json==null||!json.isObject())throw new IllegalArgumentException("Invalid conversation body");var names=Set.of(fields);var keys=json.fieldNames();while(keys.hasNext())if(!names.contains(keys.next()))throw new IllegalArgumentException("Invalid conversation field");for(var node:json)if(!node.isTextual())throw new IllegalArgumentException("Invalid conversation value");return json;}catch(com.fasterxml.jackson.core.JacksonException e){throw new IllegalArgumentException("Invalid conversation JSON");}}
+ private JsonNode body(HttpServletRequest r,String...fields)throws IOException{query(r);byte[] bytes=r.getInputStream().readNBytes(16385);if(bytes.length>16384)throw new IllegalArgumentException("Conversation body too large");try{var json=mapper.readTree(bytes);if(json==null||!json.isObject())throw new IllegalArgumentException("Invalid conversation body");var names=Set.of(fields);var keys=json.propertyNames().iterator();while(keys.hasNext())if(!names.contains(keys.next()))throw new IllegalArgumentException("Invalid conversation field");for(var node:json)if(!node.isTextual())throw new IllegalArgumentException("Invalid conversation value");return json;}catch(tools.jackson.core.JacksonException e){throw new IllegalArgumentException("Invalid conversation JSON");}}
  private String required(JsonNode json,String field){if(!json.path(field).isTextual())throw new IllegalArgumentException("Missing conversation field");return json.path(field).asText();}
  private void empty(HttpServletRequest r)throws IOException{query(r);if(r.getInputStream().read()!=-1)throw new IllegalArgumentException("No body accepted");}
  private <T>ResponseEntity<T> result(int code,java.util.function.Supplier<T> work){try{return ResponseEntity.status(code).cacheControl(CacheControl.noStore()).body(work.get());}catch(org.springframework.dao.DataAccessException|org.springframework.transaction.TransactionException e){throw new RunFailure("conversation_persistence_failure",500);}}

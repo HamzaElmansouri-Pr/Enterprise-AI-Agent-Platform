@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.tool.api;
 
 import com.elmacore.agentplatform.tool.application.ToolGateway;
 import com.elmacore.agentplatform.tool.domain.*;
-import com.fasterxml.jackson.databind.*;
+import tools.jackson.databind.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.*;
@@ -43,9 +43,9 @@ public class ToolController {
     private JsonNode body(HttpServletRequest request)throws IOException {
         query(request);byte[] bytes=request.getInputStream().readNBytes(16385);if(bytes.length>16384)throw new IllegalArgumentException("Tool request too large");
         try{var json=mapper.readTree(bytes);if(json==null || !json.isObject())throw new IllegalArgumentException("Invalid tool request");return json;}
-        catch(com.fasterxml.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid tool request");}
+        catch(tools.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid tool request");}
     }
-    private <T>T convert(JsonNode json,Class<T> type){try{return mapper.treeToValue(json,type);}catch(com.fasterxml.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid tool request");}}
+    private <T>T convert(JsonNode json,Class<T> type){try{return mapper.treeToValue(json,type);}catch(tools.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid tool request");}}
     private static void strings(JsonNode node,String... names){for(String name:names)if(!node.path(name).isTextual())throw new IllegalArgumentException("Invalid tool fields");}
     private ResponseEntity<Response> response(Proposal p,int code){return ResponseEntity.status(code).cacheControl(CacheControl.noStore()).body(Response.from(p));}
     @PostMapping(value="/agents/{agentId}/tool-proposals",consumes=MediaType.APPLICATION_JSON_VALUE)

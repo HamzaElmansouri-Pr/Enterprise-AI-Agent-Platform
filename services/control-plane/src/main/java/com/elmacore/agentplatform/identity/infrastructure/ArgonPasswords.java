@@ -8,6 +8,10 @@ public final class ArgonPasswords implements Passwords {
     private final Argon2PasswordEncoder encoder = new Argon2PasswordEncoder(16, 32, 1, 19456, 2);
     private final String dummy = encoder.encode(UUID.randomUUID().toString());
     @Override public String encode(String password) { return encoder.encode(password); }
-    @Override public boolean matches(String password, String hash) { return encoder.matches(password, hash); }
+    @Override public boolean matches(String password, String hash) {
+        com.elmacore.agentplatform.operations.OperationalSignals.loginHashStarted();
+        try { return encoder.matches(password, hash); }
+        finally { com.elmacore.agentplatform.operations.OperationalSignals.loginHashFinished(); }
+    }
     @Override public String dummyHash() { return dummy; }
 }

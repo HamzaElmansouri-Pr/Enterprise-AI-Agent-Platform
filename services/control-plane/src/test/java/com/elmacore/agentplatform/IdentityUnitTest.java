@@ -33,10 +33,11 @@ class IdentityUnitTest {
     }
     @Test void localLimiterBoundsGlobalAttemptsAndHashingConcurrency() {
         var limiter = new LoginProtection(Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC));
-        limiter.enter("one"); limiter.enter("two");
-        assertThrows(IdentityFailure.class, () -> limiter.enter("three"));
-        limiter.leave(); limiter.leave();
-        for (int i = 0; i < 17; i++) { limiter.enter("distinct-" + i); limiter.leave(); }
-        assertThrows(IdentityFailure.class, () -> limiter.enter("blocked"));
+        var one = limiter.enter(new Email("one@example.com"));
+        var two = limiter.enter(new Email("two@example.com"));
+        assertThrows(IdentityFailure.class, () -> limiter.enter(new Email("three@example.com")));
+        one.close(); two.close();
+        for (int i = 0; i < 20; i++) limiter.attempt();
+        assertThrows(IdentityFailure.class, limiter::attempt);
     }
 }

@@ -3,7 +3,7 @@ package com.elmacore.agentplatform.tool.infrastructure;
 import com.elmacore.agentplatform.tool.application.ProposalRuntime;
 import com.elmacore.agentplatform.execution.application.ExecutionRuntime;
 import com.elmacore.agentplatform.execution.domain.RunFailure;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.*;
 import java.net.InetSocketAddress;
@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class HttpProposalRuntimeTest {
-    HttpServer server;String address;final ObjectMapper mapper=new ObjectMapper().enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    HttpServer server;String address;final ObjectMapper mapper=tools.jackson.databind.json.JsonMapper.builder().enable(tools.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     final AtomicReference<String> body=new AtomicReference<>();
     @BeforeEach void start()throws Exception {server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);address="http://127.0.0.1:"+server.getAddress().getPort();}
     @AfterEach void stop(){server.stop(0);}

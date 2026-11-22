@@ -1,30 +1,62 @@
 package com.elmacore.agentplatform.identity.api;
 
-import java.time.Clock;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Semaphore;
-import org.springframework.stereotype.Component;
 import com.elmacore.agentplatform.identity.application.IdentityFailure;
+import com.elmacore.agentplatform.identity.domain.Email;
+import com.elmacore.agentplatform.operations.OperationalSignals;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.time.Clock;
+import java.util.*;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.stereotype.Component;
 import static com.elmacore.agentplatform.identity.application.IdentityFailure.Reason.LIMITED;
 
-/** Bounded single-process development protection; deliberately does not trust forwarded headers. */
+/** Process-local resource admission. Nginx owns TCP-peer throttling in the pilot. */
 @Component
 public final class LoginProtection {
     private final Clock clock;
-    private final Map<String, Integer> attempts = new HashMap<>();
-    private final Semaphore hashing = new Semaphore(2);
-    private long window;
+    private final Set<String> active = new HashSet<>();
+    private final byte[] pepper = new byte[32];
+    private long window = Long.MIN_VALUE;
     private int total;
     public LoginProtection() { this(Clock.systemUTC()); }
-    public LoginProtection(Clock clock) { this.clock = clock; }
-    public synchronized void enter(String address) {
-        long current = clock.millis() / 60000;
-        if (current != window) { window = current; attempts.clear(); total = 0; }
-        int count = attempts.getOrDefault(address, 0);
-        if (total >= 20 || count >= 5 || (attempts.size() >= 1024 && count == 0)) throw new IdentityFailure(LIMITED);
-        total++; attempts.put(address, count + 1);
-        if (!hashing.tryAcquire()) throw new IdentityFailure(LIMITED);
+    public LoginProtection(Clock clock) { this.clock = clock; new SecureRandom().nextBytes(pepper); }
+
+    /** All syntactically routable JSON login attempts count, including malformed bodies and busy retries. */
+    public synchronized void attempt() {
+        long current = Math.floorDiv(clock.millis(), 60000);
+        if (current != window) { window = current; total = 0; }
+        if (total >= 20) limited(OperationalSignals.Event.LOGIN_GLOBAL_LIMITED);
+        total++;
     }
-    public void leave() { hashing.release(); }
+
+    /** No queue and no account cooldown: concurrent work for one normalized identity is redundant. */
+    public synchronized Permit enter(Email email) {
+        String key = key(email.value());
+        if (active.contains(key)) limited(OperationalSignals.Event.LOGIN_IDENTITY_BUSY);
+        if (active.size() >= 2) limited(OperationalSignals.Event.LOGIN_HASH_BUSY);
+        active.add(key);
+        return new Permit(key);
+    }
+    private String key(String normalized) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(pepper, "HmacSHA256"));
+            return HexFormat.of().formatHex(mac.doFinal(normalized.getBytes(StandardCharsets.UTF_8)));
+        } catch (GeneralSecurityException impossible) { throw new IllegalStateException("Identity admission unavailable"); }
+    }
+    private static void limited(OperationalSignals.Event event) {
+        OperationalSignals.record(event, 1);
+        throw new IdentityFailure(LIMITED);
+    }
+    public final class Permit implements AutoCloseable {
+        private String key;
+        private Permit(String key) { this.key = key; }
+        @Override public void close() {
+            synchronized (LoginProtection.this) {
+                if (key != null) { active.remove(key); key = null; }
+            }
+        }
+    }
 }

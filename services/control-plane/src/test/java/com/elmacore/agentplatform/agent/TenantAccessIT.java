@@ -8,17 +8,17 @@ import com.elmacore.agentplatform.identity.application.*;
 import com.elmacore.agentplatform.tool.application.*;
 import com.elmacore.agentplatform.tool.domain.*;
 import com.elmacore.agentplatform.tenancy.application.TenantTransactions;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.*;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @Testcontainers @SpringBootTest @AutoConfigureMockMvc @ExtendWith(OutputCaptureExtension.class)
 class TenantAccessIT {
- @Container static final PostgreSQLContainer<?> DB=container();
+ @Container static final PostgreSQLContainer DB=container();
  @DynamicPropertySource static void properties(DynamicPropertyRegistry p){configure(DB,p);}
  @Autowired TenantAccessManagement access;@Autowired MockMvc mvc;@Autowired ObjectMapper mapper;@Autowired JwtTokens tokens;
  @Autowired MembershipAuthorization authorization;@Autowired TenantTransactions tx;@Autowired DataSource source;@Autowired ToolGateway tools;

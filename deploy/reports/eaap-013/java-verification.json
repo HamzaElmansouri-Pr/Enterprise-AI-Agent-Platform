@@ -1,0 +1,174 @@
+{
+  "command": "./mvnw -B -ntp verify",
+  "java": 21,
+  "springBoot": "4.2.0",
+  "tomcat": "11.0.29",
+  "totals": {
+    "tests": 276,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "com.elmacore.agentplatform.HealthSecurityTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "5.918"
+    },
+    {
+      "name": "com.elmacore.agentplatform.IdentityUnitTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.026"
+    },
+    {
+      "name": "com.elmacore.agentplatform.LoginProtectionTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.244"
+    },
+    {
+      "name": "com.elmacore.agentplatform.access.InvitationSecretTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.05"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.AgentDomainTest",
+      "tests": "22",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.334"
+    },
+    {
+      "name": "com.elmacore.agentplatform.conversation.ConversationDomainTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.016"
+    },
+    {
+      "name": "com.elmacore.agentplatform.execution.infrastructure.HttpExecutionRuntimeTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.337"
+    },
+    {
+      "name": "com.elmacore.agentplatform.identity.infrastructure.BootstrapConfigurationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.274"
+    },
+    {
+      "name": "com.elmacore.agentplatform.knowledge.KnowledgeDomainTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.523"
+    },
+    {
+      "name": "com.elmacore.agentplatform.knowledge.infrastructure.HttpEmbeddingsTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "2.08"
+    },
+    {
+      "name": "com.elmacore.agentplatform.operations.PilotEnvironmentTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.035"
+    },
+    {
+      "name": "com.elmacore.agentplatform.tool.infrastructure.HttpProposalRuntimeTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.333"
+    },
+    {
+      "name": "com.elmacore.agentplatform.AuthenticationIT",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "16.282"
+    },
+    {
+      "name": "com.elmacore.agentplatform.PersistenceIsolationIT",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "3.047"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.AgentConfigurationIT",
+      "tests": "36",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "6.709"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.ControlledAgentExecutionIT",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "6.899"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.ConversationIT",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "7.024"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.KnowledgeIngestionIT",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "9.738"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.TenantAccessIT",
+      "tests": "26",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "9.005"
+    },
+    {
+      "name": "com.elmacore.agentplatform.agent.ToolGatewayIT",
+      "tests": "23",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "5.834"
+    }
+  ]
+}

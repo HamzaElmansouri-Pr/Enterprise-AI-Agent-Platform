@@ -5,7 +5,7 @@ import com.elmacore.agentplatform.agent.application.AgentPageRequest;
 import com.elmacore.agentplatform.agent.domain.AgentConfiguration;
 import com.elmacore.agentplatform.agent.domain.AgentDetails;
 import com.elmacore.agentplatform.agent.domain.AgentStatus;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.MediaType;

@@ -57,6 +57,15 @@ jobs:
       - run: uv run --locked ruff check .
       - run: uv run --locked ruff format --check .
       - run: uv run --locked pytest
+      - name: Validate synthetic evaluation dataset and offline metric controls
+        working-directory: .
+        run: |
+          python -m evaluation validate --dataset evaluation/datasets/core-v1
+          python -m unittest discover -s evaluation/tests -v
+      - name: Lint evaluation harness
+        run: |
+          uv run --locked ruff check --config pyproject.toml ../../evaluation
+          uv run --locked ruff format --check --config pyproject.toml ../../evaluation
 
   web:
     name: Frontend lint, types, tests, and build

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "core-v1",
+  "fixtureVersion": 1,
+  "languages": [
+    "en",
+    "fr",
+    "ar",
+    "ary"
+  ],
+  "counts": {
+    "category": {
+      "retrieval": 32,
+      "supported": 4,
+      "unanswerable": 4,
+      "conflict": 2,
+      "injection": 6,
+      "memory": 12,
+      "citation": 4,
+      "authorization": 8
+    },
+    "language": {
+      "en": 38,
+      "fr": 12,
+      "ar": 11,
+      "ary": 11
+    }
+  },
+  "labeling": "Hand-authored synthetic facts and document-level binary relevance labels. Expected evidence is an editorial aid, never an automatic correctness oracle. Correctness/grounding require independent human review. Boundary cases specify executable invariants.",
+  "weaknesses": [
+    "Small convenience sample, not representative of customer distribution.",
+    "Multilingual passages coexist in each document; cross-language transfer is not isolated.",
+    "Darija labels are provisional and require independent native-speaker review; Latin script coverage is small.",
+    "Unanswerable labels mean absent from this synthetic corpus, not globally unknowable.",
+    "Conflicting bulletin facts have no priority; clarification rather than invented precedence is expected."
+  ],
+  "files": {
+    "cases.json": "a9eccaa384ec590f7da1c01778f999cc92a8464266533a3bc3da49be753a2d88",
+    "fixtures/attack-txt.txt": "64d219f886f02071f7329725c45f8d2d4b9055b284b20b820a8b96b3b04d812d",
+    "fixtures/attack.pdf": "8ac9deba303de7cfbe4b4d51a2dcef6c70ca2e004ac36f5a1ec75b02fce8585b",
+    "fixtures/calendar-conflict.txt": "0447e822389657f29af528a0e741ff0defb4ee9a04add299189a4702c1c4dfa3",
+    "fixtures/calendar.txt": "94b6c4b8f07e602c6f4d30d351cd5a37685063120bdd2ced913dd3fcb16ab0ac",
+    "fixtures/fees.txt": "a0abea6af46b938000b6ce045a5bf7a22de6ab43060ed00d00101c7ffaa15f68",
+    "fixtures/housing.txt": "9da3e929ef44158113325316605c534ad7f691d4d0240ac09a2bfd8443993a36",
+    "fixtures/language.txt": "cb45fa9c931d8d8366d5e5fbc93b1cf892ab92cb136e1b1104adc464235a0a35",
+    "fixtures/other-tenant.txt": "159b0ef410ebb67978d3e4f24e157b4408158540732354af10ec415709afd1dc",
+    "fixtures/registration.txt": "baa4a4ace07ec0905871e8184c4b6c7335f909d9f34bce011978bbf19bb0b043",
+    "fixtures/scholarship.txt": "cffbe9eff044518a829a6fb1e7c373176a91b63f2bd771008d1461e10fa608b5",
+    "fixtures/support.txt": "6f281a7bce0ee81d785d243b12786a4b380b43cbc5af6480b04300f55f9e8698",
+    "fixtures/unassociated.txt": "a68925c9f8eb765e352faf8c2ceafbec86a78cb5c7fa1d80c68a2de0ddaf4e70",
+    "fixtures/visa.txt": "36fa9cd81f0aaf28e4cec079a72e9684424e61f0ee1feea86f999343acf6fc1a"
+  }
+}

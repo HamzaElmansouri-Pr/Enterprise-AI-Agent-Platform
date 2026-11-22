@@ -1,7 +1,7 @@
 package com.elmacore.agentplatform.access.api;
 import com.elmacore.agentplatform.access.application.TenantAccessManagement;
 import com.elmacore.agentplatform.access.domain.AccessRecords.*;
-import com.fasterxml.jackson.databind.*;
+import tools.jackson.databind.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.*;
@@ -27,7 +27,7 @@ public class AccessController {
     private <T>T body(HttpServletRequest request,Class<T> type,String...fields)throws IOException{
         query(request);byte[] bytes=request.getInputStream().readNBytes(4097);if(bytes.length>4096)throw new IllegalArgumentException("Access request too large");
         try{var json=mapper.readTree(bytes);if(json==null||!json.isObject()||json.size()!=fields.length)throw new IllegalArgumentException("Invalid access request");for(String field:fields)if(!json.path(field).isTextual())throw new IllegalArgumentException("Invalid access fields");return mapper.treeToValue(json,type);}
-        catch(com.fasterxml.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid access request");}
+        catch(tools.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid access request");}
     }
     private void noBody(HttpServletRequest request)throws IOException{query(request);if(request.getInputStream().read()!=-1)throw new IllegalArgumentException("No body accepted");}
     private <T>ResponseEntity<T> response(T body,int code){return ResponseEntity.status(code).cacheControl(CacheControl.noStore()).body(body);}

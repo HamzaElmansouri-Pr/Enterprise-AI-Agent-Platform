@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.execution.api;
 
 import com.elmacore.agentplatform.execution.application.AgentRuns;
 import com.elmacore.agentplatform.execution.domain.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.*;
@@ -30,7 +30,7 @@ public class RunController {
             if(json==null || !json.isObject() || !json.path("message").isTextual()
                     || (!json.path("topK").isMissingNode() && (!json.path("topK").isIntegralNumber() || !json.path("topK").canConvertToInt())))throw new IllegalArgumentException("Invalid execution");
             input=mapper.treeToValue(json,RunInput.class);
-        } catch(com.fasterxml.jackson.core.JacksonException error) {
+        } catch(tools.jackson.core.JacksonException error) {
             // Framework DEBUG exception resolution must not echo private JSON fragments.
             throw new IllegalArgumentException("Invalid execution request");
         }

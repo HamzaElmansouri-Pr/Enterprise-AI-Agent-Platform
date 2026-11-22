@@ -8,7 +8,7 @@ The authoritative governance is [AGENTS.md](../../AGENTS.md). Supporting rules c
 
 | Area | Approved technology | Version status |
 | --- | --- | --- |
-| Control plane and future Tool Gateway | Java, Spring Boot, Spring Security, Spring Data JPA, Flyway, PostgreSQL JDBC | Java 21; Spring Boot 3.5.16; Maven 3.9.11 with Wrapper 3.3.4; Boot-managed persistence/test dependencies |
+| Control plane and future Tool Gateway | Java, Spring Boot, Spring Security, Spring Data JPA, Flyway, PostgreSQL JDBC | Java 21; Spring Boot 4.2.0 / Framework 7.1.0 (EAAP-013); Maven 3.9.11 with Wrapper 3.3.4; Boot-managed persistence/test dependencies |
 | Agent runtime | Python, FastAPI, LangGraph | Python 3.12; FastAPI 0.165.0; LangGraph 1.2.24; uv 0.13.9 |
 | Frontend | React, TypeScript, Vite | React 19.3.1; TypeScript 6.0.3; Vite 8.3.8; Node 22; npm |
 | Persistence and retrieval storage | PostgreSQL, pgvector | PostgreSQL 17; pgvector 0.8.7 available but not activated; tenant-identity/RLS schema via Flyway |
@@ -71,3 +71,5 @@ The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-
 [ADR 0010](decisions/0010-agent-evaluation-framework.md) records the isolated evaluation laboratory, real retrieval metrics, synthetic safety/history checks and deliberate hosted-review controls. EAAP-011 starts from independently accepted EAAP-000–010 and merged PR13; the new implementation remains pending independent review.
 
 - [ADR 0011 — Pilot security and recovery](decisions/0011-operational-security-and-recovery.md)
+
+- [ADR0012 — Identity ingress and supported Spring](decisions/0012-identity-ingress-and-supported-spring.md)

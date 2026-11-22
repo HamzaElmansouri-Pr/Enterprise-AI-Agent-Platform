@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.execution.infrastructure;
 
 import com.elmacore.agentplatform.execution.application.ExecutionRuntime;
 import com.elmacore.agentplatform.execution.domain.RunFailure;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.*;
 import java.time.Duration;
@@ -59,10 +59,10 @@ public final class HttpExecutionRuntime implements ExecutionRuntime, com.elmacor
             return mapper.treeToValue(json,Response.class);
         } catch(TimeoutException error){throw new RunFailure("PROVIDER_TIMEOUT",504);}
         catch(InterruptedException error){Thread.currentThread().interrupt();throw new RunFailure("RUNTIME_UNAVAILABLE",503);}
-        catch(java.io.IOException|ExecutionException error){throw new RunFailure("RUNTIME_UNAVAILABLE",502);}
+        catch(tools.jackson.core.JacksonException|ExecutionException error){throw new RunFailure("RUNTIME_UNAVAILABLE",502);}
         finally {if(pending!=null && !pending.isDone())pending.cancel(true);}
     }
-    private static boolean validToken(com.fasterxml.jackson.databind.JsonNode n,int max) {return n.isNull() || (n.isIntegralNumber() && n.canConvertToInt() && n.intValue()>=0 && n.intValue()<=max);}
+    private static boolean validToken(tools.jackson.databind.JsonNode n,int max) {return n.isNull() || (n.isIntegralNumber() && n.canConvertToInt() && n.intValue()>=0 && n.intValue()<=max);}
     /** Completes at end-of-body so the future deadline covers the entire bounded response. */
     private static final class BoundedBody implements HttpResponse.BodySubscriber<byte[]> {
         private final java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();

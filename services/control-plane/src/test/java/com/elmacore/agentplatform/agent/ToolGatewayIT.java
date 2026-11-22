@@ -9,18 +9,18 @@ import com.elmacore.agentplatform.identity.application.MembershipAuthorization;
 import com.elmacore.agentplatform.identity.infrastructure.JwtTokens;
 import com.elmacore.agentplatform.tenancy.application.TenantTransactions;
 import com.elmacore.agentplatform.infrastructure.persistence.PostgresTenantContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.*;
 import org.springframework.context.annotation.*;
 import org.springframework.test.context.*;
 import org.springframework.test.web.servlet.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import javax.sql.DataSource;
 import java.sql.*;
@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(ToolGatewayIT.Fixtures.class)
 @ExtendWith(OutputCaptureExtension.class)
 class ToolGatewayIT {
-    @Container static final PostgreSQLContainer<?> DB=container();
+    @Container static final PostgreSQLContainer DB=container();
     @DynamicPropertySource static void properties(DynamicPropertyRegistry props){configure(DB,props);}
     @Autowired MockMvc mvc;@Autowired ObjectMapper mapper;@Autowired JwtTokens tokens;
     @Autowired ToolGateway gateway;@Autowired ProposalStore store;@Autowired JdbcProposalStore jdbcStore;

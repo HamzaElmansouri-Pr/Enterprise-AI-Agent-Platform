@@ -1,0 +1,7 @@
+{
+  "packagesQueried": 109,
+  "findings": [],
+  "checkedAt": "2026-11-22",
+  "method": "OSV Maven runtime query; official maintainer bulletins separately reviewed",
+  "limitations": "No query matches does not establish no known issues: Apache November advisories prompted Tomcat 11.0.29 override; cluster TLS-PSK CVE-2026-133325 remains conditional/unpatched and unused. See EAAP-013 advisory table."
+}

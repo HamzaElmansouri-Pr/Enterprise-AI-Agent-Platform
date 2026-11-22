@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.tool.infrastructure;
 
 import com.elmacore.agentplatform.tool.application.*;
 import com.elmacore.agentplatform.tool.domain.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.*;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import javax.sql.DataSource;
@@ -28,11 +28,11 @@ public final class JdbcProposalStore implements ProposalStore {
                 new ToolPayload(r.getString("tool_name"),args,r.getString("rationale")),r.getInt("tool_version"),r.getString("payload_digest"),Proposal.Status.valueOf(r.getString("status")),instant(r,"created_at"),
                 decision==null?null:new Proposal.Decision(decision,r.getObject("approver_id",UUID.class),r.getString("approved_digest"),r.getString("decision"),r.getString("reason"),instant(r,"decided_at")),
                 r.getObject("executed_by",UUID.class),r.getObject("task_id",UUID.class),r.getString("failure_code"),instant(r,"started_at"),instant(r,"completed_at"));
-        }catch(java.io.IOException error){throw new IllegalStateException("Invalid stored tool payload");}
+        }catch(tools.jackson.core.JacksonException error){throw new IllegalStateException("Invalid stored tool payload");}
     }
     @Override public Proposal insert(UUID tenant,UUID agent,UUID creator,UUID id,ToolPayload payload,String digest,UUID correlation) {
         transaction();String args;
-        try{args=mapper.writeValueAsString(payload.arguments());}catch(java.io.IOException error){throw new IllegalArgumentException("Invalid tool arguments");}
+        try{args=mapper.writeValueAsString(payload.arguments());}catch(tools.jackson.core.JacksonException error){throw new IllegalArgumentException("Invalid tool arguments");}
         jdbc.update("INSERT INTO platform.tool_proposals(id,tenant_id,agent_id,created_by,tool_name,tool_version,arguments,rationale,payload_digest,correlation_id) VALUES(?,?,?,?,?,1,?::jsonb,?,?,?)",id,tenant,agent,creator,payload.toolName(),args,payload.rationale(),digest,correlation);
         return get(tenant,id,null,false);
     }

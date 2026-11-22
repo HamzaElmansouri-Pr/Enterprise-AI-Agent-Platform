@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.operations;
 
 import java.util.*;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -38,7 +38,7 @@ public final class PilotEnvironment implements EnvironmentPostProcessor, Ordered
         if(!env.getProperty("spring.config.import", "").equals("configtree:/run/secrets/")) invalid();
         if(!env.getProperty("management.server.port", "").equals("9090")
             || !env.getProperty("management.endpoints.web.exposure.include", "").equals("health,pilot")
-            || !env.getProperty("server.forward-headers-strategy", "").equals("none")
+            || !env.getProperty("server.request.header.forwarded.strategy", "").equals("none")
             || !env.getProperty("logging.level.root", "INFO").equalsIgnoreCase("INFO")
             || env.getProperty("debug",Boolean.class,false) || env.getProperty("trace",Boolean.class,false)) invalid();
         for(String name:List.of("SPRING_APPLICATION_JSON","JAVA_TOOL_OPTIONS","JDK_JAVA_OPTIONS","OPENAI_API_KEY","MIGRATION_DB_PASSWORD","IDENTITY_OPERATOR_DB_PASSWORD"))

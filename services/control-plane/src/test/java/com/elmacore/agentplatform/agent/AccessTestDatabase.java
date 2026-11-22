@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.agent;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 import java.nio.file.Files;
@@ -37,8 +37,8 @@ final class AccessTestDatabase {
     static final KeyPair KEY = rsa();
     static final Path PRIVATE = pem("PRIVATE", KEY.getPrivate().getEncoded());
     static final Path PUBLIC = pem("PUBLIC", KEY.getPublic().getEncoded());
-    static PostgreSQLContainer<?> container() {
-        return new PostgreSQLContainer<>(DockerImageName.parse("pgvector/pgvector:0.8.7-pg17-trixie").asCompatibleSubstituteFor("postgres"))
+    static PostgreSQLContainer container() {
+        return new PostgreSQLContainer(DockerImageName.parse("pgvector/pgvector:0.8.7-pg17-trixie").asCompatibleSubstituteFor("postgres"))
                 .withDatabaseName("agent_test").withUsername("bootstrap_test").withPassword(UUID.randomUUID().toString())
                 .withEnv("POSTGRES_USER", "bootstrap_test").withEnv("POSTGRES_DB", "agent_test")
                 .withEnv("MIGRATION_DB_PASSWORD", MIGRATION).withEnv("DB_PASSWORD", RUNTIME)
@@ -47,7 +47,7 @@ final class AccessTestDatabase {
             .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sh"), "/docker-entrypoint-initdb.d/10-platform-roles.sh")
                 .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sql"), "/opt/eaap/bootstrap.sql");
     }
-    static void configure(PostgreSQLContainer<?> database, DynamicPropertyRegistry properties) {
+    static void configure(PostgreSQLContainer database, DynamicPropertyRegistry properties) {
         var v2 = Flyway.configure().dataSource(database.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).target("6").load();
         assertThat(v2.migrate().migrationsExecuted).isEqualTo(6);
@@ -66,7 +66,7 @@ final class AccessTestDatabase {
         properties.add("AUTH_AUDIENCE", () -> AUDIENCE);
         properties.add("AUTH_KEY_ID", () -> "test-agent-key");
     }
-    static Connection admin(PostgreSQLContainer<?> database) throws Exception {
+    static Connection admin(PostgreSQLContainer database) throws Exception {
         var settings = new Properties();
         settings.setProperty("user", database.getUsername()); settings.setProperty("password", database.getPassword());
         settings.setProperty("options", "-c log_error_verbosity=terse -c log_min_error_statement=panic");

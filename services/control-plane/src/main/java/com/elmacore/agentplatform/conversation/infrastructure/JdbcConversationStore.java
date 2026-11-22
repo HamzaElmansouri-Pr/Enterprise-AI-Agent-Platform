@@ -4,8 +4,8 @@ import com.elmacore.agentplatform.conversation.domain.ConversationRecords.*;
 import com.elmacore.agentplatform.execution.application.RunStore;
 import com.elmacore.agentplatform.execution.domain.RunFailure;
 import com.elmacore.agentplatform.execution.domain.RunResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
 import org.springframework.jdbc.core.*;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import javax.sql.DataSource;
@@ -58,6 +58,6 @@ public final class JdbcConversationStore implements ConversationStore {
    FROM platform.conversation_turns t JOIN platform.agent_runs r ON r.id=t.run_id
    CROSS JOIN (VALUES ('USER'),('ASSISTANT')) v(role)
    WHERE t.tenant_id=? AND t.conversation_id=? ORDER BY t.ordinal,v.role DESC LIMIT ? OFFSET ?
-   """,(r,n)->{try{return new Message(r.getObject("message_id",UUID.class),r.getObject("request_id",UUID.class),r.getLong("message_ordinal"),r.getString("role"),r.getString("content"),r.getString("status"),mapper.readValue(r.getString("citations"),new TypeReference<List<RunResult.Citation>>(){}),r.getObject("run_id",UUID.class),r.getTimestamp("message_created_at").toInstant());}catch(java.io.IOException e){throw new IllegalStateException("Invalid conversation citations");}},tenant,id,limit,offset);
+   """,(r,n)->{try{return new Message(r.getObject("message_id",UUID.class),r.getObject("request_id",UUID.class),r.getLong("message_ordinal"),r.getString("role"),r.getString("content"),r.getString("status"),mapper.readValue(r.getString("citations"),new TypeReference<List<RunResult.Citation>>(){}),r.getObject("run_id",UUID.class),r.getTimestamp("message_created_at").toInstant());}catch(tools.jackson.core.JacksonException e){throw new IllegalStateException("Invalid conversation citations");}},tenant,id,limit,offset);
  }
 }

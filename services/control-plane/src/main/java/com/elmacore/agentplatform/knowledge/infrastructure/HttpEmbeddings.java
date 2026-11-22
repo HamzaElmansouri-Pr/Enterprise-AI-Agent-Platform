@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.knowledge.infrastructure;
 
 import com.elmacore.agentplatform.knowledge.application.Embeddings;
 import com.elmacore.agentplatform.knowledge.domain.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.*;
 import java.time.Duration;
@@ -47,7 +47,7 @@ public final class HttpEmbeddings implements Embeddings {
                 return List.copyOf(vectors);
             }
         } catch(InterruptedException error) {Thread.currentThread().interrupt();throw new KnowledgeFailure("EMBEDDING_UNAVAILABLE",503);}
-        catch(java.io.IOException|java.util.concurrent.ExecutionException|java.util.concurrent.TimeoutException error) {throw new KnowledgeFailure("EMBEDDING_UNAVAILABLE",503);}
+        catch(tools.jackson.core.JacksonException|java.util.concurrent.ExecutionException|java.util.concurrent.TimeoutException error) {throw new KnowledgeFailure("EMBEDDING_UNAVAILABLE",503);}
         finally { if(pending!=null && !pending.isDone()) pending.cancel(true); active.release(); }
     }
     /** Completes at end-of-body so the future deadline covers the entire bounded response. */

@@ -2,8 +2,8 @@ package com.elmacore.agentplatform.execution.infrastructure;
 
 import com.elmacore.agentplatform.execution.application.RunStore;
 import com.elmacore.agentplatform.execution.domain.*;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import javax.sql.DataSource;
@@ -39,14 +39,14 @@ public final class JdbcRunStore implements RunStore {
                 List<RunResult.Citation> citations=mapper.readValue(r.getString("citations"),new TypeReference<List<RunResult.Citation>>(){});
                 return new RunResult(r.getObject("id",UUID.class),r.getObject("agent_id",UUID.class),r.getString("status"),r.getString("answer"),citations,
                     new RunResult.Usage((Integer)r.getObject("input_tokens"),(Integer)r.getObject("output_tokens")),(Long)r.getObject("duration_ms"),r.getString("failure_code"),r.getString("model_id"));
-            } catch(java.io.IOException error){throw new IllegalStateException("Invalid persisted run");}
+            } catch(tools.jackson.core.JacksonException error){throw new IllegalStateException("Invalid persisted run");}
         },tenant,agent,user,run);
         if(rows.isEmpty())throw new RunFailure("RUN_NOT_FOUND",404);
         return rows.getFirst();
     }
     @Override public boolean finish(UUID tenant,UUID agent,UUID user,RunResult result) {
         transaction();String citations;
-        try {citations=mapper.writeValueAsString(result.citations());}catch(java.io.IOException error){throw new IllegalStateException("Invalid citations");}
+        try {citations=mapper.writeValueAsString(result.citations());}catch(tools.jackson.core.JacksonException error){throw new IllegalStateException("Invalid citations");}
         boolean updated=jdbc.update("""
             UPDATE platform.agent_runs SET status=?,answer=?,citations=?::jsonb,failure_code=?,model_id=?,
             input_tokens=?,output_tokens=?,duration_ms=?,completed_at=GREATEST(clock_timestamp(),created_at)

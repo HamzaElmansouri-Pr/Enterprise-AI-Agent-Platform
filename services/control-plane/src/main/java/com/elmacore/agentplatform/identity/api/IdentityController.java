@@ -6,7 +6,7 @@ import com.elmacore.agentplatform.identity.domain.Email;
 import com.elmacore.agentplatform.identity.domain.TenantAccess;
 import com.elmacore.agentplatform.identity.application.AccessTokens;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
@@ -49,22 +49,23 @@ public class IdentityController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TokenResponse> login(HttpServletRequest request) throws IOException {
         if (request.getQueryString() != null) throw new IllegalArgumentException("Query parameters forbidden");
-        protection.enter(request.getRemoteAddr());
-        try {
-            // Bound bytes before JSON deserialization, including chunked requests.
-            byte[] body = request.getInputStream().readNBytes(4097);
-            if (body.length > 4096) throw new IllegalArgumentException("Request too large");
-            var json = mapper.readTree(body);
-            if (json == null || !json.isObject() || json.size() != 2 || !json.path("email").isTextual()
-                    || !json.path("password").isTextual()) throw new IllegalArgumentException("Invalid credentials input");
-            var credentials = mapper.treeToValue(json, LoginRequest.class);
-            if (credentials == null || !validator.validate(credentials).isEmpty()) throw new IllegalArgumentException("Invalid credentials input");
-            var email = new Email(credentials.email());
+        protection.attempt();
+        // Bound bytes before JSON deserialization, including chunked requests.
+        byte[] body = request.getInputStream().readNBytes(4097);
+        if (body.length > 4096) throw new IllegalArgumentException("Request too large");
+        var json = mapper.readTree(body);
+        if (json == null || !json.isObject() || json.size() != 2 || !json.path("email").isTextual()
+                || !json.path("password").isTextual()) throw new IllegalArgumentException("Invalid credentials input");
+        var credentials = mapper.treeToValue(json, LoginRequest.class);
+        if (credentials == null || !validator.validate(credentials).isEmpty()) throw new IllegalArgumentException("Invalid credentials input");
+        var email = new Email(credentials.email());
+        try (var permit = protection.enter(email)) {
             String token = login.execute(email, credentials.password());
             return ResponseEntity.ok().cacheControl(CacheControl.noStore()).header("Pragma", "no-cache")
                     .body(new TokenResponse(token, "Bearer", AccessTokens.LIFETIME_SECONDS));
-        } finally { protection.leave(); }
+        }
     }
+
     @GetMapping("/tenants/{tenantId}/context")
     public TenantAccess tenant(@PathVariable UUID tenantId, @AuthenticationPrincipal Jwt jwt) {
         return context.execute(UUID.fromString(jwt.getSubject()), tenantId);

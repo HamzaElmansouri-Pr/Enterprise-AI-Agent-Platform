@@ -30,7 +30,7 @@ Knowledge processing is opt-in: prepare the pinned local model and internal secr
 
 ## Stack and structure
 
-- Java 21, Spring Boot 3.5.16, Maven 3.9.11 via Maven Wrapper 3.3.4.
+- Java 21, Spring Boot 4.2.0 / Spring Framework 7.1.0, Maven 3.9.11 via Maven Wrapper 3.3.4.
 - Python 3.12, FastAPI 0.165.0, LangGraph 1.2.24, uv 0.13.9.
 - React 19.3.1, TypeScript 6.0.3, Vite 8.3.8, Node 22, npm.
 - PostgreSQL 17 with pgvector 0.8.7, Docker Compose, GitHub Actions.
@@ -154,3 +154,5 @@ Agent evaluation (EAAP-011): [synthetic benchmark CLI](evaluation/README.md) and
 ## Opt-in secure pilot and recovery
 
 EAAP-012 adds a separate HTTPS pilot profile with file-delivered secrets, private dependency networks and authenticated encrypted logical backup/restore. Start with [pilot operations](docs/engineering/pilot-deployment-operations.md), [recovery](docs/engineering/backup-and-disaster-recovery.md), [operational threat model](docs/security/operational-threat-model.md) and [privacy proposal](docs/security/data-retention-and-privacy.md). The normal development commands above retain their behavior. This foundation is pending architect acceptance and does not authorize a public deployment.
+
+EAAP-013 documents the supported Spring upgrade and layered login protection in [identity ingress operations](docs/engineering/identity-ingress-operations.md). The pilot keeps forwarded-header trust disabled; see [delivery evidence](docs/tasks/EAAP-013.md).

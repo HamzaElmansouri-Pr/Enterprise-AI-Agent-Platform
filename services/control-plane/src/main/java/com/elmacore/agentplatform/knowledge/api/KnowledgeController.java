@@ -2,7 +2,7 @@ package com.elmacore.agentplatform.knowledge.api;
 
 import com.elmacore.agentplatform.knowledge.application.*;
 import com.elmacore.agentplatform.knowledge.domain.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.*;

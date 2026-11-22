@@ -68,3 +68,5 @@ Recommended next task, subject to architect approval: resolve build/package tool
 [EAAP-011 — AI quality evaluation and safety benchmarking](EAAP-011.md): versioned multilingual synthetic fixtures, real embedding/pgvector measurements, deterministic boundary/history checks, explicit hosted opt-in and reproducible reports; pending independent review.
 
 - [EAAP-012 — Operational security and recovery](EAAP-012.md)
+
+- [EAAP-013 — Identity ingress and supported Spring](EAAP-013.md)

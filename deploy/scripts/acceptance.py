@@ -13,6 +13,7 @@ from pathlib import Path
 
 from deploy.scripts import backup
 from deploy.scripts.failures import running_failures, startup_without_database
+from deploy.scripts.identity_ingress import probe as identity_probe
 from deploy.scripts.pilot import (
     OperationError,
     Pilot,
@@ -246,6 +247,8 @@ def drill(source_config, destination_directory, report):
         evidence["checks"]["httpsBusinessFlows"] = "pass"
         check_private_logs(source, client.tokens, password)
         evidence["checks"]["sourceLogRedaction"] = "pass"
+        evidence["identityIngress"] = identity_probe(source, password)
+        check_private_logs(source, client.tokens, password)
         before = snapshot(source)
         source_state = source.database_preflight()
         certificate_dir = Path(source_config).parent / "offline-backup-key"

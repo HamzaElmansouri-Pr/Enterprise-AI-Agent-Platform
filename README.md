@@ -146,3 +146,5 @@ Java `verify` requires Docker: it covers HTTP security/liveness with an unavaila
 GitHub Actions runs these components independently with read-only repository permissions, immutable action SHAs, and no deployment or paid API calls. See [EAAP-001 evidence](docs/tasks/EAAP-001.md) and [EAAP-002 evidence](docs/tasks/EAAP-002.md) for executed checks and limitations; a workflow definition alone is not evidence of passing CI.
 
 Controlled agent execution (EAAP-006): [local provider setup, API checks and failure diagnosis](docs/engineering/agent-execution-operations.md). Hosted execution is opt-in; no API key is needed for startup or automated tests.
+
+Trusted tool approval (EAAP-007): [offline two-account proposal, review and task execution](docs/engineering/tool-approval-operations.md). Manual proposals need no paid model; self-approval is prohibited.

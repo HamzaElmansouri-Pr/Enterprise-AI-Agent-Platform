@@ -7,7 +7,6 @@ import com.elmacore.agentplatform.knowledge.application.Knowledge;
 import com.elmacore.agentplatform.tenancy.application.TenantTransactions;
 import com.elmacore.agentplatform.execution.domain.*;
 import java.util.*;
-import java.util.concurrent.Semaphore;
 
 public final class AgentRuns {
     private final MembershipAuthorization authorization;
@@ -16,11 +15,11 @@ public final class AgentRuns {
     private final Knowledge knowledge;
     private final RunStore store;
     private final ExecutionRuntime runtime;
-    private final Semaphore active=new Semaphore(2);
+    private final ExecutionAdmission admission;
     public AgentRuns(MembershipAuthorization authorization,TenantTransactions transactions,AgentStore agents,
-                     Knowledge knowledge,RunStore store,ExecutionRuntime runtime) {
+                     Knowledge knowledge,RunStore store,ExecutionRuntime runtime,ExecutionAdmission admission) {
         this.authorization=authorization;this.transactions=transactions;this.agents=agents;
-        this.knowledge=knowledge;this.store=store;this.runtime=runtime;
+        this.knowledge=knowledge;this.store=store;this.runtime=runtime;this.admission=admission;
     }
     private AgentConfiguration agent(UUID tenant,UUID id,boolean draft) {
         var agent=agents.find(tenant,id).orElseThrow(AgentNotFound::new);
@@ -36,7 +35,7 @@ public final class AgentRuns {
     public RunResult start(UUID user,UUID tenant,UUID agent,RunInput input,UUID correlation) {
         var scope=authorization.authorize(user,tenant);
         transactions.execute(scope,()->agent(tenant,agent,true));
-        if(!active.tryAcquire()) throw new RunFailure("EXECUTION_BUSY",429);
+        admission.acquire();
         UUID run=null;long started=System.nanoTime();
         try {
             transactions.execute(scope,()-> {agent(tenant,agent,true);store.recover(tenant,agent,user);store.admit(tenant);return null;});
@@ -82,7 +81,7 @@ public final class AgentRuns {
                 catch(RuntimeException ignored) { safePersistenceFailure(run); }
             }
             throw failure;
-        } finally {active.release();}
+        } finally {admission.release();}
     }
     private static long elapsed(long started){return (System.nanoTime()-started)/1_000_000;}
     private void terminal(UUID user,UUID tenant,UUID agent,RunResult result) {

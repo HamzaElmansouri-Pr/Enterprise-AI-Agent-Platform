@@ -3,11 +3,11 @@
 import asyncio
 import logging
 import os
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 import httpx
 from openai import APIError, APITimeoutError, AsyncOpenAI
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from agent_runtime.execution.contracts import (
     Answer,
@@ -15,6 +15,9 @@ from agent_runtime.execution.contracts import (
     ExecutionFailure,
     Usage,
 )
+from agent_runtime.proposals.contracts import ProposalCompletion, ToolProposal
+
+_CompletionT = TypeVar("_CompletionT", Completion, ProposalCompletion)
 
 MODEL = "gpt-5.4-mini-2026-03-17"
 for name in ("openai", "httpx", "httpcore"):
@@ -39,6 +42,18 @@ class OpenAIProvider:
             self.tokens, self.timeout = 0, 0
 
     async def complete(self, messages: list[dict[str, str]]) -> Completion:
+        return await self._request(messages, Answer, Completion)
+
+    async def propose(self, messages: list[dict[str, str]]) -> ProposalCompletion:
+        return await self._request(messages, ToolProposal, ProposalCompletion)
+
+    async def _request(
+        self,
+        messages: list[dict[str, str]],
+        schema: type[BaseModel],
+        completion_type: type[_CompletionT],
+    ) -> _CompletionT:
+        # Schemas are selected only by these two fixed methods, never caller input.
         if (
             not self.key
             or self.model != MODEL
@@ -65,7 +80,7 @@ class OpenAIProvider:
                     response = await client.responses.parse(
                         model=MODEL,
                         input=messages,
-                        text_format=Answer,
+                        text_format=schema,
                         max_output_tokens=self.tokens,
                         store=False,
                         reasoning={"effort": "none"},
@@ -82,7 +97,7 @@ class OpenAIProvider:
                     raise ExecutionFailure(
                         "INVALID_MODEL_OUTPUT", 502, model_id=MODEL, usage=usage
                     )
-                return Completion(
+                return completion_type(
                     result=response.output_parsed,
                     modelId=response.model,
                     usage=usage,

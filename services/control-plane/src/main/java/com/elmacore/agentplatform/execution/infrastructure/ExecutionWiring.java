@@ -14,13 +14,14 @@ import org.springframework.core.env.Environment;
 @Configuration(proxyBeanMethods=false)
 @ConditionalOnWebApplication(type=ConditionalOnWebApplication.Type.SERVLET)
 public class ExecutionWiring {
+    @Bean ExecutionAdmission executionAdmission(){return new ExecutionAdmission();}
     @Bean RunStore runStore(DataSource source,ObjectMapper mapper){return new JdbcRunStore(source,mapper);}
     @Bean ExecutionRuntime executionRuntime(Environment env,ObjectMapper mapper) {
         String secret=env.getProperty("EXECUTION_INTERNAL_SECRET","");
         if(!secret.isEmpty() && secret.equals(env.getProperty("EMBEDDING_SECRET")))throw new IllegalArgumentException("Dedicated execution credential required");
         return new HttpExecutionRuntime(env.getProperty("EXECUTION_RUNTIME_URL","http://agent-runtime:8000"),secret,mapper);
     }
-    @Bean AgentRuns agentRuns(MembershipAuthorization auth,TenantTransactions tx,AgentStore agents,Knowledge knowledge,RunStore store,ExecutionRuntime runtime) {
-        return new AgentRuns(auth,tx,agents,knowledge,store,runtime);
+    @Bean AgentRuns agentRuns(MembershipAuthorization auth,TenantTransactions tx,AgentStore agents,Knowledge knowledge,RunStore store,ExecutionRuntime runtime,ExecutionAdmission admission) {
+        return new AgentRuns(auth,tx,agents,knowledge,store,runtime,admission);
     }
 }

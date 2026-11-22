@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   java:
-    name: Java build, executions, knowledge, agents, authentication, and PostgreSQL isolation tests
+    name: Java build, tool approvals, executions, knowledge, agents, authentication, and RLS
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
@@ -35,7 +35,7 @@ jobs:
         run: docker version
       # Tests use ephemeral RSA keys, disposable databases and test-only runtime/provider adapters.
       # No paid hosted model calls or provider secrets are used in CI.
-      - name: Verify execution, knowledge, agents, authentication, and RLS regressions
+      - name: Verify tool approval, execution, knowledge, agents, authentication, and RLS regressions
         run: ./mvnw -B -ntp verify
 
   python:

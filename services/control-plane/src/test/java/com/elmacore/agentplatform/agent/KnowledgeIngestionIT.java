@@ -50,7 +50,7 @@ class KnowledgeIngestionIT {
     @BeforeEach void seed()throws Exception {
         embeddings.fail.set(false);embeddings.interrupt.set(false);
         try(var c=admin(DB);var s=c.createStatement()) {
-            s.execute("TRUNCATE platform.agent_runs,platform.agent_run_daily_quota,platform.knowledge_chunks,platform.agent_documents,platform.knowledge_content,platform.knowledge_documents,platform.agent_configurations,platform.tenant_memberships,platform.users,platform.tenants");
+            s.execute("TRUNCATE platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs,platform.agent_run_daily_quota,platform.knowledge_chunks,platform.agent_documents,platform.knowledge_content,platform.knowledge_documents,platform.agent_configurations,platform.tenant_memberships,platform.users,platform.tenants");
             try(var p=c.prepareStatement("INSERT INTO platform.tenants(id,name) VALUES(?,'A'),(?,'B')")){p.setObject(1,A);p.setObject(2,B);p.executeUpdate();}
             for(UUID u:List.of(OWNER,ADMIN,MEMBER,B_OWNER,OUTSIDER)) {
                 try(var p=c.prepareStatement("INSERT INTO platform.users(id,email,password_hash) VALUES(?,?,'$argon2id$test-only-unused')")){p.setObject(1,u);p.setString(2,"u"+u+"@example.test");p.executeUpdate();}

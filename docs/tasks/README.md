@@ -58,3 +58,5 @@ Recommended next task, subject to architect approval: resolve build/package tool
 [EAAP-006 — Controlled agent execution](EAAP-006.md): bounded synchronous runs, LangGraph, hosted-provider adapter, validated citations and private run persistence; pending independent review.
 
 [EAAP-007 — Trusted Tool Gateway and human approval](EAAP-007.md): one real admissions follow-up task tool, immutable proposal/digest and explicit separation of duties; pending independent review.
+
+[EAAP-008 — Secure tenant operations console](EAAP-008.md): real role-aware React workflows over existing APIs; EAAP-000 through EAAP-007 are accepted; pending independent review.

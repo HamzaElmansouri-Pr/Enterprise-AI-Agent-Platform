@@ -61,3 +61,5 @@ The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-
 [ADR 0005](decisions/0005-controlled-agent-execution.md) defines the bounded synchronous LangGraph/hosted-provider execution slice, tenant/creator-isolated run persistence, daily budgets, and validated source mapping. See [execution operations](../engineering/agent-execution-operations.md).
 
 [ADR 0006](decisions/0006-tool-gateway-and-human-approval.md) defines one allowlisted admissions task tool, immutable proposals, different-human approval, atomic SQL effects and shared AI admission. See [tool approval operations](../engineering/tool-approval-operations.md).
+
+[ADR 0007](decisions/0007-tenant-operations-console.md) records the secure tenant console, memory-only authentication, same-origin Spring proxy and separate human approval/execution interactions. See [console operations](../engineering/web-console-operations.md).

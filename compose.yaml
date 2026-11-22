@@ -44,9 +44,6 @@ services:
     image: eaap-web:0.0.1-dev
     build:
       context: ./apps/web
-      args:
-        VITE_CONTROL_PLANE_API_URL: ${VITE_CONTROL_PLANE_API_URL:-http://127.0.0.1:8080}
-        VITE_AGENT_RUNTIME_API_URL: ${VITE_AGENT_RUNTIME_API_URL:-http://127.0.0.1:8000}
     ports:
       - "127.0.0.1:4173:4173"
     mem_limit: 256m

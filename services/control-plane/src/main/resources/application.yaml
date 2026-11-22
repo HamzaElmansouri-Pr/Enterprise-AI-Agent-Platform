@@ -1,4 +1,9 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 2097152B
+      max-request-size: 2113536B
+      file-size-threshold: 0B
   jackson:
     deserialization:
       fail-on-unknown-properties: true
@@ -58,3 +63,13 @@ management:
     health:
       show-details: never
       show-components: never
+
+knowledge:
+  worker:
+    enabled: ${KNOWLEDGE_WORKER_ENABLED:false}
+
+# Parser diagnostics may echo untrusted contents; expose safe failure codes instead.
+logging:
+  level:
+    org.apache.pdfbox: 'OFF'
+    org.apache.fontbox: 'OFF'

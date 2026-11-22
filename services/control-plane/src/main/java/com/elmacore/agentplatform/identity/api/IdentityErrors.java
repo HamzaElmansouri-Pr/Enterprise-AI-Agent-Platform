@@ -30,6 +30,14 @@ public class IdentityErrors {
     ResponseEntity<Error> invalid(Exception error) { return ResponseEntity.badRequest().body(new Error("invalid_request")); }
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     ResponseEntity<Error> media(Exception error) { return ResponseEntity.status(415).body(new Error("json_required")); }
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    ResponseEntity<Error> uploadTooLarge(Exception error) {
+        return ResponseEntity.status(413).body(new Error("upload_too_large"));
+    }
+    @ExceptionHandler(org.springframework.web.multipart.MultipartException.class)
+    ResponseEntity<Error> invalidMultipart(Exception error) {
+        return ResponseEntity.badRequest().body(new Error("invalid_request"));
+    }
     @ExceptionHandler(Exception.class)
     ResponseEntity<Error> internal(Exception error) {
         LOG.error("identity_request_failed correlation_id={}", org.slf4j.MDC.get("correlation_id"));

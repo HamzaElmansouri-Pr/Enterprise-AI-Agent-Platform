@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   java:
-    name: Java build, agent configuration, authentication, and PostgreSQL isolation tests
+    name: Java build, knowledge, agents, authentication, and PostgreSQL isolation tests
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
@@ -34,7 +34,7 @@ jobs:
       - name: Verify Docker for Testcontainers
         run: docker version
       # Identity and agent tests generate ephemeral test-only RSA keys; no signing secrets are injected.
-      - name: Verify agents, concurrency, login, membership, bootstrap, and RLS regressions
+      - name: Verify knowledge, vector ranking, worker, agents, authentication, and RLS regressions
         run: ./mvnw -B -ntp verify
 
   python:

@@ -66,6 +66,7 @@ class AuthenticationIT {
             .withEnv("POSTGRES_USER", "bootstrap_test").withEnv("POSTGRES_DB", "eaap_auth_test")
             .withEnv("MIGRATION_DB_PASSWORD", MIGRATION).withEnv("DB_PASSWORD", RUNTIME)
             .withEnv("IDENTITY_OPERATOR_DB_PASSWORD", OPERATOR)
+            .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/knowledge-extension.sql"), "/docker-entrypoint-initdb.d/20-knowledge-extension.sql")
             .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sh"),
                     "/docker-entrypoint-initdb.d/10-platform-roles.sh")
             .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sql"), "/opt/eaap/bootstrap.sql");
@@ -77,9 +78,9 @@ class AuthenticationIT {
         // Explicit upgrade from the accepted V1 state, preserving its checksum/history.
         var latest = Flyway.configure().dataSource(DB.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(3);
         latest.validate();
-        assertThat(latest.info().applied()).hasSize(3);
+        assertThat(latest.info().applied()).hasSize(4);
         registry.add("spring.datasource.url", DB::getJdbcUrl);
         registry.add("spring.datasource.password", () -> RUNTIME);
         registry.add("spring.datasource.hikari.maximum-pool-size", () -> "1");

@@ -37,7 +37,7 @@ The migration pool permits two connections because Flyway retains its metadata/l
 
 For host migrations, export `DB_URL` and `MIGRATION_DB_PASSWORD`, then run `./mvnw spring-boot:run -Dspring-boot.run.profiles=migration` from `services/control-plane`. The URL must reference a securely reachable database; Compose intentionally publishes no PostgreSQL host port. The ordinary host service uses `DB_PASSWORD` and cannot migrate.
 
-Flyway uses the existing `platform` schema and its migration-owned history table. Create-schemas, automatic baseline, destructive clean, and retry loops are disabled. Versions are applied in order; successful versions are validated and skipped on repeated runs. No extension is enabled, including pgvector, because this task has no vector schema.
+Flyway uses the existing `platform` schema and its migration-owned history table. Create-schemas, automatic baseline, destructive clean, and retry loops are disabled. Versions are applied in order; successful versions are validated and skipped on repeated runs. EAAP-005 V4 requires administrator-owned `extensions.vector` before migration. Use the explicit privileged setup in [knowledge operations](knowledge-operations.md); neither runtime nor migration receives extension-management privileges. V1–V3 remain unchanged.
 
 ## Recovery and compatibility
 

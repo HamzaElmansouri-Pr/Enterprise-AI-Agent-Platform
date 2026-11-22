@@ -89,6 +89,8 @@ case "${1:-up}" in
         compose build control-plane
         # Existing volumes are preserved; synchronize dedicated role credentials with .env.
         compose exec -T postgres sh /docker-entrypoint-initdb.d/10-platform-roles.sh
+        # Explicit privileged extension operation; HTTP/migration roles cannot manage extensions.
+        compose exec -T postgres sh -c 'exec psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /opt/eaap/knowledge-extension.sql'
         docker compose --env-file "$PROJECT_DIR/.env" \
             -f "$PROJECT_DIR/compose.yaml" -f "$PROJECT_DIR/compose.migration.yaml" \
             run --rm --no-deps control-plane

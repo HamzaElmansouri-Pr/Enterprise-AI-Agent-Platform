@@ -43,7 +43,8 @@ final class AgentTestDatabase {
                 .withEnv("POSTGRES_USER", "bootstrap_test").withEnv("POSTGRES_DB", "agent_test")
                 .withEnv("MIGRATION_DB_PASSWORD", MIGRATION).withEnv("DB_PASSWORD", RUNTIME)
                 .withEnv("IDENTITY_OPERATOR_DB_PASSWORD", OPERATOR)
-                .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sh"), "/docker-entrypoint-initdb.d/10-platform-roles.sh")
+                .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/knowledge-extension.sql"), "/docker-entrypoint-initdb.d/20-knowledge-extension.sql")
+            .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sh"), "/docker-entrypoint-initdb.d/10-platform-roles.sh")
                 .withCopyFileToContainer(MountableFile.forHostPath("../../infrastructure/docker/postgres/bootstrap.sql"), "/opt/eaap/bootstrap.sql");
     }
     static void configure(PostgreSQLContainer<?> database, DynamicPropertyRegistry properties) {
@@ -52,10 +53,10 @@ final class AgentTestDatabase {
         assertThat(v2.migrate().migrationsExecuted).isEqualTo(2);
         var latest = Flyway.configure().dataSource(database.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(2);
         latest.validate();
         assertThat(latest.migrate().migrationsExecuted).isZero();
-        assertThat(latest.info().applied()).hasSize(3);
+        assertThat(latest.info().applied()).hasSize(4);
         properties.add("spring.datasource.url", database::getJdbcUrl);
         properties.add("spring.datasource.password", () -> RUNTIME);
         properties.add("spring.datasource.hikari.maximum-pool-size", () -> "2");

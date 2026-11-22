@@ -32,6 +32,12 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokens tokens, IdentityStore identities) throws Exception {
         var paths = PathPatternRequestMatcher.withDefaults();
+        var knowledgeWrites = new OrRequestMatcher(
+                paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/knowledge/documents"),
+                paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/knowledge/documents/*/retry"),
+                paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/knowledge/documents/*/agents/*"),
+                paths.matcher(HttpMethod.DELETE, "/api/v1/tenants/*/knowledge/documents/*/agents/*"),
+                paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/agents/*/knowledge/search"));
         var agentWrites = new OrRequestMatcher(
                 paths.matcher(HttpMethod.POST, "/api/v1/tenants/*/agents"),
                 paths.matcher(HttpMethod.PUT, "/api/v1/tenants/*/agents/*"),
@@ -45,11 +51,14 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/v1/tenants/*/agents", "/api/v1/tenants/*/agents/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/tenants/*/agents", "/api/v1/tenants/*/agents/*/archive").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/tenants/*/agents/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tenants/*/knowledge/documents", "/api/v1/tenants/*/knowledge/documents/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/tenants/*/knowledge/documents", "/api/v1/tenants/*/knowledge/documents/*/retry", "/api/v1/tenants/*/knowledge/documents/*/agents/*", "/api/v1/tenants/*/agents/*/knowledge/search").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/tenants/*/knowledge/documents/*/agents/*").authenticated()
                         .anyRequest().denyAll())
-                // Only approved stateless login/agent writes are exempt: authentication uses bearer
+                // Only approved stateless login/agent/knowledge writes are exempt: authentication uses bearer
                 // Authorization headers, never cookies or sessions. All other routes retain CSRF.
                 .csrf(csrf -> csrf.ignoringRequestMatchers(request -> "POST".equals(request.getMethod())
-                        && (request.getContextPath() + "/api/v1/auth/login").equals(request.getRequestURI()), agentWrites))
+                        && (request.getContextPath() + "/api/v1/auth/login").equals(request.getRequestURI()), agentWrites, knowledgeWrites))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(cache -> cache.disable())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.decoder(tokens).jwtAuthenticationConverter(token -> {

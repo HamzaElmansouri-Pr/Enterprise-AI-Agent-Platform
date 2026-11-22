@@ -1,6 +1,6 @@
 # Enterprise AI Agent Platform
 
-AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. EAAP-003 adds local password login, short-lived RS256 tokens, current tenant-membership authorization, and offline owner bootstrap. EAAP-004 adds tenant-owned agent configuration creation, listing, retrieval, updates and archival; see [ADR 0003](docs/architecture/decisions/0003-agent-configuration-domain.md) for API contracts and [validation evidence](docs/tasks/EAAP-004.md). The APIs expose process-health, protected tenant-context and agent configuration endpoints; the frontend shows static **Not connected** statuses. Tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agent execution, workflows, LLM calls, retrieval, Tool Gateway, billing, and deployment are not implemented.
+AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. EAAP-003 adds local password login, short-lived RS256 tokens, current tenant-membership authorization, and offline owner bootstrap. EAAP-004 adds tenant-owned agent configuration creation, listing, retrieval, updates and archival; see [ADR 0003](docs/architecture/decisions/0003-agent-configuration-domain.md) for API contracts and [validation evidence](docs/tasks/EAAP-004.md). EAAP-005 adds secure PDF/TXT ingestion, local CPU embeddings and tenant-isolated pgvector passage retrieval; see [knowledge setup and sample](docs/engineering/knowledge-operations.md) and [ADR 0004](docs/architecture/decisions/0004-knowledge-ingestion-and-retrieval.md). The APIs expose health, identity, agent configuration and knowledge endpoints; the frontend shows static **Not connected** statuses. Tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agent execution, workflows, LLM answer generation, Tool Gateway, billing, and deployment are not implemented.
 
 ## Run the complete local project
 
@@ -14,7 +14,7 @@ docker buildx version
 
 Legacy `docker-compose` v1 does not support this workflow. If `docker compose` or `docker buildx` is missing, follow Docker's [Compose plugin installation](https://docs.docker.com/compose/install/linux/) and [Buildx installation](https://github.com/docker/buildx#installing) instructions. User-local Linux plugin binaries belong in `~/.docker/cli-plugins/`, must be executable, and should be verified against release checksums. Manual installations require explicit updates.
 
-Then run from the repository root:
+For the baseline stack, run from the repository root:
 
 ```sh
 ./dev.sh up
@@ -25,6 +25,8 @@ This prepares an ignored, owner-readable `.env`, filling missing or blank databa
 Database connection settings live in `.env`: `DB_HOST=postgres`, `DB_PORT=5432`, `POSTGRES_DB=eaap_dev`, and `DB_PASSWORD` for the fixed `eaap_runtime` role. PostgreSQL runs as a service in the same Compose project with persistent storage and no host port. The other three passwords serve separate provisioning, migration and identity-operator boundaries.
 
 Open the frontend at http://127.0.0.1:4173 and Java health at http://127.0.0.1:8080/actuator/health. Use `./dev.sh logs` for bounded logs and `./dev.sh down` to stop while preserving database data. `./dev.sh init` only prepares `.env`. After startup, `./dev.sh bootstrap` interactively creates the first tenant/owner using a hidden password prompt and the offline operator profile. Signing keys and an initial owner are configured separately through [authentication operations](docs/engineering/authentication-operations.md); login remains disabled until signing keys are supplied.
+
+Knowledge processing is opt-in: prepare the pinned local model and internal secret, then use `compose.knowledge.yaml` together with signing configuration. Follow the [exact knowledge setup commands](docs/engineering/knowledge-operations.md); baseline startup keeps the worker disabled.
 
 ## Stack and structure
 
@@ -101,6 +103,8 @@ cp .env.example .env
 docker compose config --quiet
 docker compose up -d --wait postgres
 docker compose build control-plane
+# Administrator-only pgvector provisioning is required before V4.
+docker compose exec -T postgres sh -c 'exec psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /opt/eaap/knowledge-extension.sql'
 # Export MIGRATION_DB_PASSWORD from your local secret source, without echoing it.
 docker compose run --rm --no-deps -e MIGRATION_DB_PASSWORD control-plane --spring.profiles.active=migration
 docker compose up --build --wait

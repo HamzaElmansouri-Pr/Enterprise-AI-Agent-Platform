@@ -56,3 +56,5 @@ The architecture foundation lists unresolved implementation decisions, including
 Recommended next task, subject to architect approval: resolve build/package tooling and exact stack versions, then approve a narrowly scoped repository scaffolding task with explicit validation commands and CI acceptance criteria. Application functionality remains outside EAAP-000.
 
 [EAAP-006 — Controlled agent execution](EAAP-006.md): bounded synchronous runs, LangGraph, hosted-provider adapter, validated citations and private run persistence; pending independent review.
+
+[EAAP-007 — Trusted Tool Gateway and human approval](EAAP-007.md): one real admissions follow-up task tool, immutable proposal/digest and explicit separation of duties; pending independent review.

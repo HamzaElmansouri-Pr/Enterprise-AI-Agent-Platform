@@ -78,9 +78,9 @@ class AuthenticationIT {
         // Explicit upgrade from the accepted V1 state, preserving its checksum/history.
         var latest = Flyway.configure().dataSource(DB.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(4);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(5);
         latest.validate();
-        assertThat(latest.info().applied()).hasSize(5);
+        assertThat(latest.info().applied()).hasSize(6);
         registry.add("spring.datasource.url", DB::getJdbcUrl);
         registry.add("spring.datasource.password", () -> RUNTIME);
         registry.add("spring.datasource.hikari.maximum-pool-size", () -> "1");

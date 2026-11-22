@@ -1,5 +1,9 @@
 import { ApiClient } from "./client";
 import {
+  memberContract,
+  invitationContract,
+  issuedContract,
+  completedContract,
   agentContract,
   documentContract,
   pageContract,
@@ -182,6 +186,48 @@ export class TenantApi {
       `${this.base}/admissions/followup-tasks?page=${page}&size=20`,
       pageContract(taskContract),
       { signal },
+    );
+  }
+  members(page = 0, signal?: AbortSignal) {
+    return this.client.request(
+      `${this.base}/members?page=${page}&size=20`,
+      pageContract(memberContract),
+      { signal },
+    );
+  }
+  invitations(page = 0, signal?: AbortSignal) {
+    return this.client.request(
+      `${this.base}/invitations?page=${page}&size=20`,
+      pageContract(invitationContract),
+      { signal },
+    );
+  }
+  invite(email: string, role: "ADMIN" | "MEMBER", signal?: AbortSignal) {
+    return this.client.request(`${this.base}/invitations`, issuedContract, {
+      method: "POST",
+      json: { email, role },
+      signal,
+    });
+  }
+  cancelInvitation(id: string, signal?: AbortSignal) {
+    return this.client.request(
+      `${this.base}/invitations/${uuid(id)}/cancel`,
+      invitationContract,
+      { method: "POST", signal },
+    );
+  }
+  changeRole(user: string, role: "ADMIN" | "MEMBER", signal?: AbortSignal) {
+    return this.client.request(
+      `${this.base}/members/${uuid(user)}/role`,
+      completedContract,
+      { method: "PUT", json: { role }, signal },
+    );
+  }
+  revokeMember(user: string, signal?: AbortSignal) {
+    return this.client.request(
+      `${this.base}/members/${uuid(user)}`,
+      completedContract,
+      { method: "DELETE", signal },
     );
   }
 }

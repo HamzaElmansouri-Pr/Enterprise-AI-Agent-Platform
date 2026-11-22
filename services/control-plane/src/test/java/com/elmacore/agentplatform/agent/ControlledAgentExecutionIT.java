@@ -48,7 +48,7 @@ class ControlledAgentExecutionIT {
     @BeforeEach void seed()throws Exception {
         runtime.reset();
         try(var c=admin(DB);var s=c.createStatement()) {
-            s.execute("TRUNCATE platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs,platform.agent_run_daily_quota,platform.knowledge_chunks,platform.agent_documents,platform.knowledge_content,platform.knowledge_documents,platform.agent_configurations,platform.tenant_memberships,platform.users,platform.tenants");
+            s.execute("TRUNCATE platform.tenant_access_audit,platform.tenant_invitations,platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs,platform.agent_run_daily_quota,platform.knowledge_chunks,platform.agent_documents,platform.knowledge_content,platform.knowledge_documents,platform.agent_configurations,platform.tenant_memberships,platform.users,platform.tenants");
             try(var p=c.prepareStatement("INSERT INTO platform.tenants(id,name) VALUES(?,'A'),(?,'B')")){p.setObject(1,A);p.setObject(2,B);p.executeUpdate();}
             for(UUID u:List.of(OWNER,ADMIN,MEMBER,B_OWNER,OUTSIDER)) {
                 try(var p=c.prepareStatement("INSERT INTO platform.users(id,email,password_hash) VALUES(?,?,'$argon2id$test-only-unused')")){p.setObject(1,u);p.setString(2,"u"+u+"@example.test");p.executeUpdate();}
@@ -137,7 +137,7 @@ class ControlledAgentExecutionIT {
         assertThat(runtime.last.passages().stream().mapToInt(p->p.text().codePointCount(0,p.text().length())).sum()).isLessThanOrEqualTo(8000);
         runtime.calls.set(0);
         runs.start(OWNER,A,AGENT_A,new RunInput("passport?",6),UUID.randomUUID());
-        assertThat(runtime.last.passages()).hasSize(6);
+        assertThat(runtime.last.passages()).hasSize(7);
         assertThat(runtime.last.passages().stream().mapToInt(p->p.text().codePointCount(0,p.text().length())).sum()).isLessThanOrEqualTo(8000);
     }
     @Test void expiredJwtAndForgedTenantClaimsCannotAuthorizeExecution()throws Exception {
@@ -178,7 +178,7 @@ class ControlledAgentExecutionIT {
         assertThat(tx.execute(auth.authorize(OWNER,A),()->store.finish(A,AGENT_A,OWNER,result))).isFalse();
         try(var c=source.getConnection();var s=c.createStatement()) {
             try(var r=s.executeQuery("SELECT count(*) FROM platform.agent_runs")){r.next();assertThat(r.getInt(1)).isZero();}
-            for(String sql:List.of("DELETE FROM platform.agent_runs","TRUNCATE platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs","UPDATE platform.agent_runs SET question='bad'","UPDATE platform.agent_runs SET user_id=gen_random_uuid()","ALTER TABLE platform.agent_runs DISABLE ROW LEVEL SECURITY")) {
+            for(String sql:List.of("DELETE FROM platform.agent_runs","TRUNCATE platform.tenant_access_audit,platform.tenant_invitations,platform.admissions_followup_tasks,platform.tool_approval_decisions,platform.tool_proposals,platform.agent_runs","UPDATE platform.agent_runs SET question='bad'","UPDATE platform.agent_runs SET user_id=gen_random_uuid()","ALTER TABLE platform.agent_runs DISABLE ROW LEVEL SECURITY")) {
                 assertThatThrownBy(()->s.execute(sql)).isInstanceOf(SQLException.class).satisfies(e->assertThat(((SQLException)e).getSQLState()).isEqualTo("42501"));
             }
             c.setAutoCommit(false);PostgresTenantContext.apply(c,B);

@@ -8,10 +8,12 @@ export function Login({
   api,
   message,
   onLogin,
+  onAccept,
 }: {
   api: ApiClient;
   message: string;
   onLogin: (token: string, expires: number) => void;
+  onAccept?: () => void;
 }) {
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState("");
@@ -74,6 +76,7 @@ export function Login({
             {action.busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        {onAccept && <button onClick={onAccept}>Accept an invitation</button>}
         <p className="muted">
           Your session stays in memory. Reloading this page requires signing in
           again.

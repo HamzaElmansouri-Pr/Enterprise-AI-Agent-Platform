@@ -12,6 +12,7 @@ from agent_runtime.execution.contracts import (
     ExecutionFailure,
     ExecutionRequest,
 )
+from agent_runtime.operations import record
 from agent_runtime.proposals.contracts import ProposalRequest
 
 router = APIRouter()
@@ -69,8 +70,16 @@ async def run_execution(request, x_execution_secret, contract):
             result["usage"]["inputTokens"],
             result["usage"]["outputTokens"],
         )
+        record("execution_completed")
         return result
     except ExecutionFailure as error:
+        record(
+            "provider_timeout"
+            if error.code == "PROVIDER_TIMEOUT"
+            else "busy"
+            if error.code == "EXECUTION_BUSY"
+            else "execution_failed"
+        )
         log.info(
             "execution_failed run_id=%s correlation_id=%s status=FAILED "
             "code=%s model=%s duration_ms=%d input_tokens=%s output_tokens=%s",
@@ -91,6 +100,7 @@ async def run_execution(request, x_execution_secret, contract):
             },
         )
     except Exception:
+        record("execution_failed")
         log.error(
             "execution_failed run_id=%s correlation_id=%s code=RUNTIME_FAILURE",
             payload.runId,
@@ -129,8 +139,16 @@ async def propose(request: Request, x_execution_secret: str = Header(default="")
             result["usage"]["inputTokens"],
             result["usage"]["outputTokens"],
         )
+        record("execution_completed")
         return result
     except ExecutionFailure as error:
+        record(
+            "provider_timeout"
+            if error.code == "PROVIDER_TIMEOUT"
+            else "busy"
+            if error.code == "EXECUTION_BUSY"
+            else "execution_failed"
+        )
         log.info(
             "proposal_failed request_id=%s correlation_id=%s code=%s model=%s "
             "duration_ms=%d input_tokens=%s output_tokens=%s",
@@ -151,6 +169,7 @@ async def propose(request: Request, x_execution_secret: str = Header(default="")
             },
         )
     except Exception:
+        record("execution_failed")
         log.error(
             "proposal_failed request_id=%s correlation_id=%s code=RUNTIME_FAILURE",
             payload.runId,

@@ -1,5 +1,4 @@
 import asyncio
-import os
 import threading
 
 from langsmith import tracing_context
@@ -7,17 +6,18 @@ from langsmith import tracing_context
 from agent_runtime.execution.contracts import ExecutionFailure, ExecutionRequest
 from agent_runtime.execution.graph import build_graph
 from agent_runtime.execution.provider import OpenAIProvider
+from agent_runtime.operations import secret
 from agent_runtime.proposals.contracts import ProposalRequest
 from agent_runtime.proposals.graph import build_proposal_graph
 
 
 class ExecutionService:
     def __init__(self):
-        self.secret = os.environ.get("EXECUTION_INTERNAL_SECRET", "")
+        self.secret = secret("EXECUTION_INTERNAL_SECRET")
         if self.secret and (
             not 32 <= len(self.secret) <= 128
             or any(not 33 <= ord(c) <= 126 for c in self.secret)
-            or self.secret == os.environ.get("EMBEDDING_SECRET")
+            or self.secret == secret("EMBEDDING_SECRET")
         ):
             raise ValueError("Invalid dedicated execution secret")
         self.slots = threading.BoundedSemaphore(2)

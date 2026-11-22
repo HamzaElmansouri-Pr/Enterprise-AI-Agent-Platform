@@ -1,0 +1,124 @@
+{
+  "paidProviderCalls": 0,
+  "checks": {
+    "databaseAbsentAtStartup": "pass",
+    "httpsBusinessFlows": "pass",
+    "sourceLogRedaction": "pass",
+    "missingTargetRoleRejected": "pass",
+    "interruptedRestoreTransactionRolledBack": "pass",
+    "sourceClusterRestoreRejected": "pass",
+    "independentClusterExactRows": "pass",
+    "restoredAuthenticationKnowledgeHistoryApprovals": "pass",
+    "httpsIngressHeadersPrivateEndpoints": "pass",
+    "missingSecretInvalidJwtRejected": "pass",
+    "failedMigrationPreservesSchema": "pass",
+    "runtimeOutageCoreIdentityAvailable": "pass",
+    "unhealthyContainerObserved": "pass",
+    "databaseInterruptionReadinessRecovery": "pass",
+    "runtimeForcedRlsWithoutContext": "pass",
+    "controlledRestartPersistentIdentity": "pass",
+    "restoredLogRedaction": "pass"
+  },
+  "backup": {
+    "bytes": 154359,
+    "sha256": "2b1aa0bc327228d639be285a78b4c6323a1d14fd1a276642544f3ef07f027eae",
+    "durationSeconds": 0.3915394049981842,
+    "format": "CMS-AuthEnvelopedData-AES-256-GCM-RSA-OAEP-SHA256-v1"
+  },
+  "restoreSeconds": 1.6058488870039582,
+  "tables": {
+    "admissions_followup_tasks": {
+      "rows": 1,
+      "sha256": "eedfe567ee634ba009e9237db93bb08e6bef63fc75b9245caf753ba2cdac4ac2"
+    },
+    "agent_configurations": {
+      "rows": 1,
+      "sha256": "b3ea74020a4eec9b82a643fdca0a9d9d8321801a98ff7229c7b954729ecefabc"
+    },
+    "agent_documents": {
+      "rows": 1,
+      "sha256": "6fbf1ecc0eb6f579da4d39a8f000a907d349b1d762bb0485fd10e3107586dcfe"
+    },
+    "agent_run_daily_quota": {
+      "rows": 1,
+      "sha256": "8cc34ff46bf184afd19c13af46c168fe47c1de8532f461e38627b5f8b6a71eaa"
+    },
+    "agent_runs": {
+      "rows": 1,
+      "sha256": "465c911ffe1c1111d0154d237e253f99f068ce987a6862c88d170ad707069062"
+    },
+    "conversation_turns": {
+      "rows": 1,
+      "sha256": "9885018db747caf87e0d863f9c3fc031910361fe1df540bbd78375b4f6aed462"
+    },
+    "conversations": {
+      "rows": 1,
+      "sha256": "750daa43623f6a85cedc326c24d54eda42d9bf3f997ba20b44c6c3fc17895e76"
+    },
+    "flyway_schema_history": {
+      "rows": 8,
+      "sha256": "cbb879eedf48c195e479b4b4c3ef30cd35503d7a79926a6e5b1c97e60aee5ec5"
+    },
+    "knowledge_chunks": {
+      "rows": 1,
+      "sha256": "af02a69ffcfa5e4865b1455b7bf69039066371687d7a603db3fd2eeb1ab6975c"
+    },
+    "knowledge_content": {
+      "rows": 1,
+      "sha256": "42a43b22a943420ab42bdbcc1423a56ccbf2defb6674e98af96e21a3c154f9e6"
+    },
+    "knowledge_documents": {
+      "rows": 1,
+      "sha256": "d486f77780ae9a7acaab3c1fb83735358b0b2a17f9c7ac4bd91e235074db80cd"
+    },
+    "tenant_access_audit": {
+      "rows": 4,
+      "sha256": "baf4b3990934c42847a6edc252aae2ed73ea3b5733f8d52f52ec75d6d045e750"
+    },
+    "tenant_invitations": {
+      "rows": 2,
+      "sha256": "596cc291d7bd189bf0e6c28cd1c38e112a09eb4890c0ad8ca04610d81d386008"
+    },
+    "tenant_memberships": {
+      "rows": 4,
+      "sha256": "2259737604c78bff35a66de79aaa82bb94804b6945d39fd5d8d31782b9ab99ca"
+    },
+    "tenants": {
+      "rows": 2,
+      "sha256": "b099d41fe4807316f3121569d2cdb0b02bc705b32822297fb9f71547bae745d5"
+    },
+    "tool_approval_decisions": {
+      "rows": 1,
+      "sha256": "4968e716c445ec8f193085a16bc3f5a2d44d4746e0df8357d0cd6248ccb68d6e"
+    },
+    "tool_proposals": {
+      "rows": 1,
+      "sha256": "678c82ce27c56b187cc23d0c9da4093409a159ece3a9a23c5f9f5e2b71438979"
+    },
+    "users": {
+      "rows": 4,
+      "sha256": "fe9137c0bdc38ae8ccdf1c9508b6978620ecc69c27de1253681a9e2eea625ffe"
+    }
+  },
+  "operations": {
+    "uptimeSeconds": 4,
+    "revision": "ccf0d42e239139d4f834e2719c35de02a3e4da53",
+    "counters": {
+      "EXECUTION_FAILED": 0,
+      "EXECUTION_RECOVERED": 0,
+      "EXECUTION_SUCCEEDED": 0,
+      "KNOWLEDGE_FAILED": 0,
+      "RATE_LIMITED": 0,
+      "REQUEST_DENIED": 0,
+      "REQUEST_FAILED": 0,
+      "REQUEST_OK": 1,
+      "TOOL_FAILED": 0
+    }
+  },
+  "durationSeconds": 365.2014892370062,
+  "sourceBuild": "Experimental working tree on accepted ccf0d42; final images include EAAP-012 patches and counters. Not a production release.",
+  "cleanup": "Owned containers/networks removed; database volumes and external protected test material retained. Developer project untouched.",
+  "additionalChecks": {
+    "nonemptyPublicExtensionCustomSchemaRejected": "pass"
+  }
+}

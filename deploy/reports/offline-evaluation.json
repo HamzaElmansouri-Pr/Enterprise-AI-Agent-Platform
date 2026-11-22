@@ -1,0 +1,133 @@
+{
+  "experimentId": "eval-ae4d2f0397c9489bad4064c11c92e4c5",
+  "status": "COMPLETE",
+  "startedAt": "2026-11-22T20:06:23.845697+00:00",
+  "completedAt": "2026-11-22T20:09:12.177714+00:00",
+  "commit": "ccf0d42e239139d4f834e2719c35de02a3e4da53",
+  "dirty": true,
+  "sourceHash": "57fd2ed1bda67c42c219bf19ef7b8497150b0bdfb6f5c663746b3bfc6fe333ad",
+  "dataset": {
+    "version": "core-v1",
+    "hash": "97c17c81b57feb9a24e820faa2251e95cad7775a63142607ae3e01236502487b"
+  },
+  "hostedInferenceOccurred": false,
+  "paidCalls": 0,
+  "caseCounts": {
+    "category": {
+      "retrieval": 32,
+      "supported": 4,
+      "unanswerable": 4,
+      "conflict": 2,
+      "injection": 6,
+      "memory": 12,
+      "citation": 4,
+      "authorization": 8
+    },
+    "language": {
+      "en": 38,
+      "fr": 12,
+      "ar": 11,
+      "ary": 11
+    }
+  },
+  "contractObservations": {
+    "invalidCitationFailure": "RUNTIME_FAILURE",
+    "missingCitationFailure": "INSUFFICIENT_KNOWLEDGE",
+    "mockCalls": 16,
+    "historyLengths": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      6,
+      6,
+      6,
+      1,
+      2,
+      2,
+      2,
+      0,
+      0
+    ],
+    "historyCharacters": [
+      0,
+      48,
+      96,
+      144,
+      192,
+      240,
+      288,
+      288,
+      288,
+      6160,
+      5920,
+      5964,
+      5964,
+      5964,
+      0,
+      0
+    ]
+  },
+  "cleanup": "owned containers, networks and volume removed",
+  "completedCases": 72,
+  "boundaryPassRate": {
+    "value": 1.0,
+    "numerator": 24,
+    "denominator": 24
+  },
+  "retrieval": {
+    "recall@1": {
+      "value": 0.75,
+      "numerator": 33.0,
+      "denominator": 44
+    },
+    "hitRate@1": {
+      "value": 0.8181818181818182,
+      "numerator": 36,
+      "denominator": 44
+    },
+    "precision@1": {
+      "value": 0.8181818181818182,
+      "numerator": 36.0,
+      "denominator": 44
+    },
+    "recall@3": {
+      "value": 0.9431818181818182,
+      "numerator": 41.5,
+      "denominator": 44
+    },
+    "hitRate@3": {
+      "value": 0.9545454545454546,
+      "numerator": 42,
+      "denominator": 44
+    },
+    "precision@3": {
+      "value": 0.3560606060606061,
+      "numerator": 15.666666666666668,
+      "denominator": 44
+    },
+    "recall@5": {
+      "value": 0.9772727272727273,
+      "numerator": 43.0,
+      "denominator": 44
+    },
+    "hitRate@5": {
+      "value": 0.9772727272727273,
+      "numerator": 43,
+      "denominator": 44
+    },
+    "precision@5": {
+      "value": 0.22272727272727275,
+      "numerator": 9.8,
+      "denominator": 44
+    },
+    "mrr": {
+      "value": 0.8896464646464647,
+      "numerator": 39.144444444444446,
+      "denominator": 44
+    }
+  }
+}

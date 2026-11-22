@@ -69,3 +69,5 @@ The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-
 [ADR 0009](decisions/0009-secure-agent-conversations.md) records private conversations, run-backed message pairs, durable idempotency and bounded multi-turn LangGraph context. EAAP-010 is pending independent review; see [conversation operations](../engineering/conversation-operations.md).
 
 [ADR 0010](decisions/0010-agent-evaluation-framework.md) records the isolated evaluation laboratory, real retrieval metrics, synthetic safety/history checks and deliberate hosted-review controls. EAAP-011 starts from independently accepted EAAP-000–010 and merged PR13; the new implementation remains pending independent review.
+
+- [ADR 0011 — Pilot security and recovery](decisions/0011-operational-security-and-recovery.md)

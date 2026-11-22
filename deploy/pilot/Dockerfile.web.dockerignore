@@ -1,0 +1,12 @@
+**
+!apps/
+!apps/web/
+!apps/web/**
+!deploy/
+!deploy/pilot/
+!deploy/pilot/nginx.conf
+apps/web/node_modules/
+apps/web/dist/
+**/.env*
+**/*.pem
+**/*.key

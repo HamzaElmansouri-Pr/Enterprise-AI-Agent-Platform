@@ -1,0 +1,13 @@
+# Explicit operator opt-in only; never used by acceptance or default startup.
+services:
+  agent-runtime:
+    environment:
+      EAAP_PROVIDER_MODE: hosted
+      OPENAI_API_KEY_FILE: /run/secrets/OPENAI_API_KEY
+      EXECUTION_MODEL: gpt-5.4-mini-2026-03-17
+    secrets: [OPENAI_API_KEY]
+    networks: [provider-egress]
+networks:
+  provider-egress: {}
+secrets:
+  OPENAI_API_KEY: {file: '${PILOT_SECRET_DIR}/OPENAI_API_KEY'}

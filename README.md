@@ -47,7 +47,7 @@ docs/tasks/                   Task inventory and delivery evidence
 compose.yaml                  Four-service development environment
 ```
 
-Follow [AGENTS.md](AGENTS.md), the [architecture foundation](docs/architecture/README.md), [EAAP-001 notes](docs/tasks/EAAP-001.md), and [database operations](docs/engineering/database-operations.md). Exact direct dependencies are pinned in `pom.xml` and `pyproject.toml`/`package.json`; Python and npm transitive resolutions are committed in `uv.lock` and `package-lock.json`. Java dependencies/plugins use Spring Boot's pinned parent management, including JPA, Flyway 11.7.2, PostgreSQL JDBC 42.7.11, and Testcontainers 1.21.4; Maven has no native npm-style lockfile.
+Follow [AGENTS.md](AGENTS.md), the [architecture foundation](docs/architecture/README.md), [EAAP-001 notes](docs/tasks/EAAP-001.md), and [database operations](docs/engineering/database-operations.md). Exact direct dependencies are pinned in `pom.xml` and `pyproject.toml`/`package.json`; Python and npm transitive resolutions are committed in `uv.lock` and `package-lock.json`. Java dependencies/plugins use Spring Boot's pinned parent management, including JPA, Flyway 11.7.2, PostgreSQL JDBC 42.7.12, and Testcontainers 1.21.4; Maven has no native npm-style lockfile. EAAP-012 pins focused managed security overrides for Jackson 2.21.7, Tomcat 10.1.59, JDBC 42.7.12 and Log4j2 2.25.5; see the operational threat model for advisory scope and remaining Spring support decisions.
 
 ## Prerequisites
 
@@ -76,7 +76,7 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-The Java server uses port 8080 (`PORT` overrides it). Python defaults to production-safe settings: debug and documentation routes are disabled, no CORS middleware is installed, and `APP_ENV` accepts only `development`, `test`, or `production`. `APP_ENV` defaults to `production`; local Compose sets `development` without enabling debug or docs. Health checks do not require PostgreSQL or credentials.
+The Java server uses port 8080 (`PORT` overrides it). Python defaults to production-safe settings: debug and documentation routes are disabled, no CORS middleware is installed, and `APP_ENV` accepts only `development`, `test`, `production`, or explicit `pilot`. `APP_ENV` defaults to `production`; local Compose sets `development` without enabling debug or docs. Health checks do not require PostgreSQL or credentials.
 
 | Component | Host URL | Expected result |
 | --- | --- | --- |
@@ -150,3 +150,7 @@ Controlled agent execution (EAAP-006): [local provider setup, API checks and fai
 Trusted tool approval (EAAP-007): [offline two-account proposal, review and task execution](docs/engineering/tool-approval-operations.md). Manual proposals need no paid model; self-approval is prohibited.
 
 Agent evaluation (EAAP-011): [synthetic benchmark CLI](evaluation/README.md) and [operations](docs/engineering/agent-evaluation-operations.md). Offline runs measure actual local embeddings/pgvector and deterministic boundaries. Hosted quality requires a separate explicitly authorized, bounded experiment; no paid calls occur in CI.
+
+## Opt-in secure pilot and recovery
+
+EAAP-012 adds a separate HTTPS pilot profile with file-delivered secrets, private dependency networks and authenticated encrypted logical backup/restore. Start with [pilot operations](docs/engineering/pilot-deployment-operations.md), [recovery](docs/engineering/backup-and-disaster-recovery.md), [operational threat model](docs/security/operational-threat-model.md) and [privacy proposal](docs/security/data-retention-and-privacy.md). The normal development commands above retain their behavior. This foundation is pending architect acceptance and does not authorize a public deployment.

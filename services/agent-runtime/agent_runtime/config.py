@@ -9,6 +9,6 @@ class Settings:
     @classmethod
     def from_environment(cls) -> "Settings":
         environment = os.environ.get("APP_ENV", "production")
-        if environment not in {"development", "test", "production"}:
-            raise ValueError("APP_ENV must be development, test, or production")
+        if environment not in {"development", "test", "production", "pilot"}:
+            raise ValueError("APP_ENV must be development, test, production, or pilot")
         return cls(environment=environment)

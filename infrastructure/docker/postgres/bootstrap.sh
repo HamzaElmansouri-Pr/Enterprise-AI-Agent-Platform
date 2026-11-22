@@ -1,6 +1,19 @@
 #!/bin/sh
 set -eu
 
+# Optional file delivery for the isolated pilot. Existing environment workflow stays supported.
+for name in DB_PASSWORD MIGRATION_DB_PASSWORD IDENTITY_OPERATOR_DB_PASSWORD; do
+  eval "secret_path=\${${name}_FILE:-}"
+  if [ -n "$secret_path" ]; then
+    eval "current_value=\${${name}:-}"
+    if [ -n "$current_value" ]; then
+      echo 'Conflicting database credential delivery' >&2; exit 1
+    fi
+    value=$(cat "$secret_path") || exit 1
+    export "$name=$value"
+  fi
+done
+
 : "${POSTGRES_USER:?Bootstrap administrator is required}"
 : "${POSTGRES_DB:?Database name is required}"
 : "${MIGRATION_DB_PASSWORD:?Set a unique local migration password}"

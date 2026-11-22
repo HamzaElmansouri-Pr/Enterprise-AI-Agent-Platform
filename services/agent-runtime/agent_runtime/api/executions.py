@@ -7,7 +7,11 @@ from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from agent_runtime.execution.contracts import ExecutionFailure, ExecutionRequest
+from agent_runtime.execution.contracts import (
+    ConversationRequest,
+    ExecutionFailure,
+    ExecutionRequest,
+)
 from agent_runtime.proposals.contracts import ProposalRequest
 
 router = APIRouter()
@@ -25,6 +29,15 @@ def unique_object(pairs):
 
 @router.post("/internal/executions")
 async def execute(request: Request, x_execution_secret: str = Header(default="")):
+    return await run_execution(request, x_execution_secret, ExecutionRequest)
+
+
+@router.post("/internal/executions/conversation")
+async def converse(request: Request, x_execution_secret: str = Header(default="")):
+    return await run_execution(request, x_execution_secret, ConversationRequest)
+
+
+async def run_execution(request, x_execution_secret, contract):
     service = request.app.state.executions
     if not service.secret or not secrets.compare_digest(
         x_execution_secret.encode("utf-8"), service.secret.encode("utf-8")
@@ -32,12 +45,15 @@ async def execute(request: Request, x_execution_secret: str = Header(default="")
         raise HTTPException(401, "unauthorized")
     body = bytearray()
     async for part in request.stream():
-        if len(body) + len(part) > 128 * 1024:
+        if (
+            len(body) + len(part)
+            > (256 if contract is ConversationRequest else 128) * 1024
+        ):
             raise HTTPException(413, "execution_too_large")
         body.extend(part)
     try:
         json.loads(body, object_pairs_hook=unique_object)
-        payload = ExecutionRequest.model_validate_json(bytes(body))
+        payload = contract.model_validate_json(bytes(body))
     except (ValidationError, ValueError, UnicodeError):
         raise HTTPException(400, "invalid_execution") from None
     start = time.monotonic()

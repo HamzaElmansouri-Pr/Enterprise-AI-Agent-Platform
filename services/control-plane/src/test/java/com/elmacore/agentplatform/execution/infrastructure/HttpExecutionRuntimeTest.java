@@ -39,6 +39,19 @@ class HttpExecutionRuntimeTest {
         var json=mapper.readTree(body.get());assertThat(json.size()).isEqualTo(5);assertThat(json.has("tenantId")).isFalse();assertThat(json.has("userId")).isFalse();
         assertThat(json.path("passages").get(0).size()).isEqualTo(2);
     }
+    @Test void multiTurnUsesDedicatedRouteAndBoundedHistoryWithoutCustomerIdentity()throws Exception {
+        var path=new AtomicReference<String>();
+        server.createContext("/internal/executions/conversation",exchange->{
+            path.set(exchange.getRequestURI().getPath());body.set(new String(exchange.getRequestBody().readAllBytes(),StandardCharsets.UTF_8));
+            assertThat(exchange.getRequestHeaders().getFirst("Authorization")).isNull();
+            assertThat(exchange.getRequestHeaders().getFirst("X-Execution-Secret")).isEqualTo("x".repeat(40));
+            byte[] bytes=("{\"answer\":\"passport\",\"sourceIds\":[\"S1\"],\"modelId\":\""+ExecutionRuntime.MODEL+"\",\"usage\":{\"inputTokens\":42,\"outputTokens\":9}}").getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200,bytes.length);try(var output=exchange.getResponseBody()){output.write(bytes);}
+        });server.start();var original=input();
+        var request=new com.elmacore.agentplatform.conversation.application.ConversationRuntime.Request(original.runId(),original.correlationId(),original.instructions(),original.message(),original.passages(),List.of(new com.elmacore.agentplatform.conversation.application.ConversationRuntime.History("earlier question","earlier answer")));
+        assertThat(client().converse(request).answer()).isEqualTo("passport");assertThat(path.get()).isEqualTo("/internal/executions/conversation");
+        var json=mapper.readTree(body.get());assertThat(json.size()).isEqualTo(6);assertThat(json.path("history").get(0).path("answer").asText()).isEqualTo("earlier answer");assertThat(json.has("tenantId")).isFalse();assertThat(json.has("userId")).isFalse();
+    }
     @Test void unconfiguredCredentialNeverCallsRuntime() {
         assertThat(assertThrows(RunFailure.class,()->new HttpExecutionRuntime(address,"",mapper).execute(input())).status()).isEqualTo(503);
         assertThat(body.get()).isNull();

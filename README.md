@@ -1,6 +1,6 @@
 # Enterprise AI Agent Platform
 
-AI agent orchestration and management platform. EAAP-001 establishes development scaffolding; EAAP-002 adds PostgreSQL role separation, Flyway tenant-identity schema, and a transaction-local RLS foundation. EAAP-003 adds local password login, short-lived RS256 tokens, current tenant-membership authorization, and offline owner bootstrap. EAAP-004 adds tenant-owned agent configuration creation, listing, retrieval, updates and archival; see [ADR 0003](docs/architecture/decisions/0003-agent-configuration-domain.md) for API contracts and [validation evidence](docs/tasks/EAAP-004.md). EAAP-005 adds secure PDF/TXT ingestion, local CPU embeddings and tenant-isolated pgvector passage retrieval; see [knowledge setup and sample](docs/engineering/knowledge-operations.md) and [ADR 0004](docs/architecture/decisions/0004-knowledge-ingestion-and-retrieval.md). The APIs expose health, identity, agent configuration and knowledge endpoints; the frontend shows static **Not connected** statuses. Tenant lifecycle/administration APIs, JPA entity mappings, frontend API connectivity, agent execution, workflows, LLM answer generation, Tool Gateway, billing, and deployment are not implemented.
+AI agent orchestration and management platform. The Spring control plane provides tenant-authorized agents, knowledge ingestion/retrieval, controlled LangGraph question answering and human-approved tool execution. EAAP-008 adds the functional React tenant operations console: login, tenant verification, agents, documents/search, single-turn execution, proposals/approvals and follow-up tasks. See [console setup and walkthrough](docs/engineering/web-console-operations.md) and [ADR 0007](docs/architecture/decisions/0007-tenant-operations-console.md). Tenant administration, public signup, external business integrations, billing and production hosting remain outside scope.
 
 ## Run the complete local project
 
@@ -82,8 +82,8 @@ The Java server uses port 8080 (`PORT` overrides it). Python defaults to product
 | --- | --- | --- |
 | Control plane | `http://127.0.0.1:8080/actuator/health` | `{"status":"UP"}` |
 | Agent runtime | `http://127.0.0.1:8000/health` | `{"status":"ok","service":"agent-runtime"}` |
-| Frontend dev server | `http://127.0.0.1:5173` | Minimal platform screen |
-| Frontend Compose preview | `http://127.0.0.1:4173` | Built minimal platform screen |
+| Frontend dev server | `http://127.0.0.1:5173` | Tenant operations login |
+| Frontend Compose preview | `http://127.0.0.1:4173` | Built tenant operations console |
 
 Spring permits anonymous `GET /actuator/health` and JSON `POST /api/v1/auth/login`; tenant context and agent configuration routes require a valid bearer and live membership. OWNER/ADMIN manage agent configurations; MEMBER has read access. Unspecified paths remain denied. See [authentication operations](docs/engineering/authentication-operations.md). Security filters and CSRF protection remain enabled, no development user is generated, and health details/other Actuator endpoints are not exposed.
 
@@ -93,7 +93,7 @@ Copy `.env.example` to the ignored root `.env` and set four different unique **l
 
 `POSTGRES_USER` and `POSTGRES_DB` default to `eaap_dev`. This is the local database bootstrap account; ordinary Java runtime uses `eaap_runtime` and one-shot migrations use `eaap_migration`; offline identity bootstrap uses `eaap_identity_operator`. `DB_URL` configures the host Java JDBC URL (Compose supplies its internal PostgreSQL DNS address). Hibernate cannot create schemas, Flyway is disabled during normal startup, and the connection pool has a zero idle minimum. `APP_ENV` configures the Python environment label. Host commands read process environment; they do not automatically load the root `.env`.
 
-`VITE_CONTROL_PLANE_API_URL` and `VITE_AGENT_RUNTIME_API_URL` are public build-time API settings, reserved for future connectivity. For host Vite, copy the two values into ignored `apps/web/.env.local` or export them in the shell. Compose supplies them as build arguments. Never put secrets in `VITE_*`; rebuilding is required after changes. The current frontend performs no API requests or polling.
+The browser uses relative `/api/v1/` paths through Vite's fixed Spring proxy: host development to `127.0.0.1:8080`, web container to `control-plane:8080`. No browser API URL or secret is required. Tokens stay in memory; reload requires login. Old VITE API URL settings are unused. See [console operations](docs/engineering/web-console-operations.md).
 
 ## Docker Compose
 
@@ -113,7 +113,7 @@ docker compose logs --tail=100
 docker compose down
 ```
 
-Use either host servers or Compose to avoid port conflicts. All published development ports bind to `127.0.0.1`; PostgreSQL has no published host port. Services share Compose's default network and resolve each other by service name. Browser API addresses use host loopback, not Compose DNS. Process health intentionally does not depend on database startup or migration state. Data persists in the `postgres-data` named volume when containers stop; do not remove the volume unless intentionally discarding local data. Existing EAAP-001 volumes need explicit [role provisioning](docs/engineering/database-operations.md) before migration; initialization scripts never reset them automatically.
+Use either host servers or Compose to avoid port conflicts. All published development ports bind to `127.0.0.1`; PostgreSQL has no published host port. Services share Compose's default network and resolve each other by service name. Browser requests stay on the web origin; the web proxy reaches Spring using Compose DNS. Process health intentionally does not depend on database startup or migration state. Data persists in the `postgres-data` named volume when containers stop; do not remove the volume unless intentionally discarding local data. Existing EAAP-001 volumes need explicit [role provisioning](docs/engineering/database-operations.md) before migration; initialization scripts never reset them automatically.
 
 See [container operations](infrastructure/docker/README.md) for exact image versions, health checks, resource caps, and pgvector verification. Vite preview serves the built frontend for local development only; production hosting is outside this task.
 
@@ -141,7 +141,7 @@ npm test
 npm run build
 ```
 
-Java `verify` requires Docker: it covers HTTP security/liveness with an unavailable database, then agent configuration/lifecycle/concurrency, login/JWT/membership/bootstrap and Flyway/schema/role/RLS behavior using a disposable Testcontainers PostgreSQL instance. No development data is used. The migration and isolation design is recorded in [ADR 0001](docs/architecture/decisions/0001-postgresql-tenant-isolation.md). Python tests cover response/schema, hidden docs, safe settings, and lack of permissive CORS. The Vitest smoke test renders the actual React screen and checks its identity and disconnected service statuses without adding a browser-test library.
+Java `verify` requires Docker: it covers HTTP security/liveness with an unavailable database, then agent configuration/lifecycle/concurrency, login/JWT/membership/bootstrap and Flyway/schema/role/RLS behavior using a disposable Testcontainers PostgreSQL instance. No development data is used. The migration and isolation design is recorded in [ADR 0001](docs/architecture/decisions/0001-postgresql-tenant-isolation.md). Python tests cover response/schema, hidden docs, safe settings, and lack of permissive CORS. Vitest exercises login, tenant isolation in UI state, feature interactions and approval safeguards using test-only HTTP fixtures and jsdom.
 
 GitHub Actions runs these components independently with read-only repository permissions, immutable action SHAs, and no deployment or paid API calls. See [EAAP-001 evidence](docs/tasks/EAAP-001.md) and [EAAP-002 evidence](docs/tasks/EAAP-002.md) for executed checks and limitations; a workflow definition alone is not evidence of passing CI.
 

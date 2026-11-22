@@ -60,7 +60,7 @@ class PersistenceIsolationIT {
                 .dataSource(POSTGRES.getJdbcUrl(), "eaap_migration", MIGRATION_PASSWORD)
                 .schemas("platform").defaultSchema("platform").createSchemas(false)
                 .cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(6);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(7);
 
         // Administrator only seeds deterministic fixtures; tenant access tests always use runtime.
         try (var admin = admin(); var statement = admin.createStatement()) {
@@ -119,6 +119,44 @@ class PersistenceIsolationIT {
             assertThat(context.containsBean("entityManagerFactory")).isFalse();
             assertThat(context.getBean(Flyway.class).info().applied()).hasSize(7);
             assertThat(context.getBean(HikariDataSource.class).getUsername()).isEqualTo("eaap_migration");
+        }
+    }
+
+    @Test
+    void invitationMigrationPreservesForcedRlsAndNarrowCapabilities() throws Exception {
+        try (var connection = runtime.getConnection()) {
+            assertThat(scalar(connection, """
+                    SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                    WHERE n.nspname='platform' AND c.relname IN ('tenant_invitations','tenant_access_audit')
+                      AND c.relrowsecurity AND c.relforcerowsecurity
+                      AND c.relowner='eaap_migration'::regrole
+                    """)).isEqualTo("2");
+            for (String table : new String[]{"tenant_invitations", "tenant_access_audit"}) {
+                for (String privilege : new String[]{"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"}) {
+                    assertThat(scalar(connection, "SELECT has_table_privilege('platform."+table+"','"+privilege+"')"))
+                            .as(table+" "+privilege).isEqualTo("f");
+                }
+            }
+            assertThat(scalar(connection, """
+                    SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                    WHERE n.nspname='platform' AND p.proname LIKE 'access_%' AND p.prosecdef
+                      AND p.proowner='eaap_migration'::regrole
+                      AND has_function_privilege(p.oid,'EXECUTE')
+                      AND EXISTS(SELECT 1 FROM unnest(p.proconfig) v
+                                 WHERE v IN ('search_path=','search_path=""'))
+                    """)).isEqualTo("8");
+            assertThat(scalar(connection, """
+                    SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                    CROSS JOIN LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+                    WHERE n.nspname='platform' AND p.proname LIKE 'access_%'
+                      AND a.grantee=0 AND a.privilege_type='EXECUTE'
+                    """)).isEqualTo("0");
+            assertThat(scalar(connection, """
+                    SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                    WHERE n.nspname='platform' AND p.proname IN
+                      ('access_tenant_lock','access_actor','access_page','access_redeem')
+                      AND has_function_privilege(p.oid,'EXECUTE')
+                    """)).isEqualTo("0");
         }
     }
 

@@ -63,3 +63,5 @@ The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-
 [ADR 0006](decisions/0006-tool-gateway-and-human-approval.md) defines one allowlisted admissions task tool, immutable proposals, different-human approval, atomic SQL effects and shared AI admission. See [tool approval operations](../engineering/tool-approval-operations.md).
 
 [ADR 0007](decisions/0007-tenant-operations-console.md) records the secure tenant console, memory-only authentication, same-origin Spring proxy and separate human approval/execution interactions. See [console operations](../engineering/web-console-operations.md).
+
+[ADR 0008](decisions/0008-tenant-invitations-and-access-management.md) records invite-only identity creation, narrow database membership capabilities, protected OWNER authority and Team & Access. EAAP-009 remains pending independent review; see [tenant access operations](../engineering/tenant-access-operations.md).

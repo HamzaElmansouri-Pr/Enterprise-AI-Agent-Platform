@@ -121,8 +121,9 @@ class TenantAccessIT {
  }
  @Test void revocationImmediatelyBlocksExistingJwtButPreservesIdentityAndToolAudit()throws Exception{
   var p=tools.submit(ADMIN,A,AGENT_A,new ToolPayload(ToolPayload.NAME,new ToolPayload.Arguments("Review","Review application",ToolPayload.Priority.NORMAL),"Staff review"),correlation());tools.decide(OWNER,A,p.id(),p.payloadDigest(),true,null,correlation());
+  sql("INSERT INTO platform.agent_runs(id,tenant_id,agent_id,user_id,question,status) VALUES(?,?,?,?,?,'RUNNING')",UUID.randomUUID(),A,AGENT_A,ADMIN,"Synthetic retained history");
   String token=bearer(ADMIN);access.change(OWNER,A,ADMIN,null,true,correlation());
-  mvc.perform(get(root(A)+"/context").header("Authorization",token)).andExpect(status().isForbidden());assertThat(count("users")).isEqualTo(5);assertThat(count("tool_proposals")).isEqualTo(1);assertThat(count("tool_approval_decisions")).isEqualTo(1);
+  mvc.perform(get(root(A)+"/context").header("Authorization",token)).andExpect(status().isForbidden());assertThat(count("users")).isEqualTo(5);assertThat(count("tool_proposals")).isEqualTo(1);assertThat(count("tool_approval_decisions")).isEqualTo(1);assertThat(count("agent_runs")).isEqualTo(1);
   assertThat(access.members(OWNER,A,0,20).items()).noneMatch(m->m.userId().equals(ADMIN));
  }
  @Test void adminCanRevokeOnlyMembersAndOldInvitationsCannotRestoreRevokedAccess()throws Exception{
@@ -163,6 +164,58 @@ class TenantAccessIT {
  @Test void pooledContextIsClearedAfterAnonymousAcceptanceAndTenantTransactions()throws Exception{
   var i=invite(OWNER,"pool@example.test","MEMBER");access.acceptNew(i.token(),"pool@example.test",PASSWORD,correlation());
   for(int n=0;n<5;n++)assertThat(new JdbcTemplate(source).queryForObject("SELECT platform.current_tenant_id()",UUID.class)).isNull();
+ }
+ @Test void runtimeCapabilitiesRecheckActorRoleAndRejectOwnerAssignment()throws Exception{
+  record Attempt(UUID actor,UUID tenant,UUID target,String role,boolean revoke){}
+  for(var attempt:List.of(new Attempt(ADMIN,A,MEMBER,"ADMIN",false),new Attempt(MEMBER,A,ADMIN,null,true),new Attempt(OWNER,A,MEMBER,"OWNER",false),new Attempt(OWNER,A,OWNER,null,true),new Attempt(OWNER,B,B_OWNER,null,true))) {
+   try(var c=DriverManager.getConnection(DB.getJdbcUrl(),"eaap_runtime",RUNTIME)){
+    c.setAutoCommit(false);com.elmacore.agentplatform.infrastructure.persistence.PostgresTenantContext.apply(c,A);
+    try(var p=c.prepareStatement("SELECT platform.access_member_change(?,?,?,?,?,?)")){
+     p.setObject(1,attempt.tenant());p.setObject(2,attempt.actor());p.setObject(3,attempt.target());p.setString(4,attempt.role());p.setBoolean(5,attempt.revoke());p.setObject(6,correlation());
+     assertThatThrownBy(p::execute).isInstanceOf(SQLException.class);
+    }finally{c.rollback();}
+   }
+  }
+  assertThat(authorization.authorize(MEMBER,A).role().name()).isEqualTo("MEMBER");assertThat(count("tenant_access_audit")).isZero();
+ }
+ @Test void disabledRecipientAndRevokedIssuerCannotRedeemInvitations()throws Exception{
+  var disabled=invite(OWNER,email(OUTSIDER),"MEMBER");sql("UPDATE platform.users SET enabled=false WHERE id=?",OUTSIDER);
+  fails(()->access.acceptExisting(disabled.token(),OUTSIDER,correlation()),410);
+  var issued=invite(ADMIN,"issuer-revoked@example.test","MEMBER");access.change(OWNER,A,ADMIN,null,true,correlation());
+  fails(()->access.acceptNew(issued.token(),"issuer-revoked@example.test",PASSWORD,correlation()),410);
+  assertThat(count("users")).isEqualTo(5);
+ }
+ @Test void concurrentDuplicateEmailProducesOnlyOneLiveInvitation()throws Exception{
+  var results=race(()->invite(OWNER,"duplicate@example.test","MEMBER"),()->invite(ADMIN," DUPLICATE@example.test ","MEMBER"));
+  assertThat(results).filteredOn(x->x instanceof Issued).hasSize(1);
+  assertThat(results).filteredOn(x->x instanceof AccessFailure f&&f.status()==409).hasSize(1);
+  assertThat(count("tenant_invitations")).isEqualTo(1);assertThat(count("tenant_access_audit")).isEqualTo(1);
+ }
+ @Test void acceptanceSecretsAndDatabaseFailuresStayOutOfDebugLogs(CapturedOutput logs)throws Exception{
+  var i=invite(OWNER,"private-new@example.test","MEMBER");
+  String hash=java.util.HexFormat.of().formatHex(InvitationSecret.hash(i.token()));
+  mvc.perform(post("/api/v1/invitations/accept-new").contentType("application/json").content(json(Map.of("token",i.token(),"email","wrong@example.test","password",PASSWORD)))).andExpect(status().isGone());
+  var accepted=access.acceptNew(i.token(),"private-new@example.test",PASSWORD,correlation());
+  fails(()->access.cancel(OWNER,A,i.invitation().id(),correlation()),409);
+  assertThat(accepted.role()).isEqualTo("MEMBER");
+  assertThat(logs.getAll()).doesNotContain(i.token(),PASSWORD,HASH,hash);
+ }
+ @Test void concurrentRedemptionAndRevocationCannotRestoreExistingMember()throws Exception{
+  var issued=invite(OWNER,email(MEMBER),"ADMIN");
+  var results=race(()->access.acceptExisting(issued.token(),MEMBER,correlation()),()->{access.change(OWNER,A,MEMBER,null,true,correlation());return "revoked";});
+  assertThat(results).contains("revoked");
+  assertThat(results).filteredOn(x->x instanceof AccessFailure f&&(f.status()==409||f.status()==410)).hasSize(1);
+  assertThat(access.members(OWNER,A,0,20).items()).noneMatch(m->m.userId().equals(MEMBER));
+  fails(()->access.acceptExisting(issued.token(),MEMBER,correlation()),410);
+ }
+ @Test void concurrentCancellationAndAcceptanceHaveOneTerminalWinner()throws Exception{
+  var issued=invite(OWNER,"cancel-race@example.test","MEMBER");
+  var results=race(()->access.acceptNew(issued.token(),"cancel-race@example.test",PASSWORD,correlation()),()->access.cancel(OWNER,A,issued.invitation().id(),correlation()));
+  assertThat(results).filteredOn(x->x instanceof AccessFailure).hasSize(1);
+  var status=access.invitations(OWNER,A,0,20).items().getFirst().status();
+  if(status.equals("ACCEPTED")){assertThat(results).filteredOn(x->x instanceof Accepted).hasSize(1);assertThat(count("users")).isEqualTo(6);}
+  else{assertThat(status).isEqualTo("CANCELLED");assertThat(count("users")).isEqualTo(5);}
+  assertThat(count("tenant_access_audit")).isEqualTo(2);
  }
  List<Object> race(Callable<?> one,Callable<?> two)throws Exception{var pool=Executors.newFixedThreadPool(2);var start=new CountDownLatch(1);try{var a=pool.submit(()->{start.await();try{return one.call();}catch(Exception e){return e;}});var b=pool.submit(()->{start.await();try{return two.call();}catch(Exception e){return e;}});start.countDown();return List.of(a.get(10,TimeUnit.SECONDS),b.get(10,TimeUnit.SECONDS));}finally{pool.shutdownNow();}}
 }

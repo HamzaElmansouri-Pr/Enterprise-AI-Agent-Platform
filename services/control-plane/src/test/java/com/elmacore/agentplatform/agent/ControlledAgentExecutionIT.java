@@ -131,14 +131,35 @@ class ControlledAgentExecutionIT {
         assertThat(runtime.calls.get()).isZero();assertThat(attempts()).isEqualTo(1);
     }
     @Test void contextBoundAndMetadataSurviveSixPassages() {
-        for(int i=0;i<7;i++)ready(OWNER,A,AGENT_A,"passport "+i+" "+"a".repeat(1000));
+        var associated=new HashSet<UUID>();
+        for(int i=0;i<7;i++)associated.add(ready(OWNER,A,AGENT_A,"passport "+i+" "+"a".repeat(1000)));
+        ready(OWNER,A,null,"UNASSOCIATED_PRIVATE");
+        ready(B_OWNER,B,AGENT_B,"OTHER_TENANT_PRIVATE");
         execute(OWNER);
         assertThat(runtime.last.passages()).hasSize(5);
         assertThat(runtime.last.passages().stream().mapToInt(p->p.text().codePointCount(0,p.text().length())).sum()).isLessThanOrEqualTo(8000);
+        // All fixture embeddings have equal similarity: the retrieval contract's tie-breakers
+        // must preserve the same source order across repeated queries and runtime transport.
+        var matches=knowledge.search(OWNER,A,AGENT_A,"passport?",6);
+        assertThat(matches).hasSize(6);
+        assertThat(knowledge.search(OWNER,A,AGENT_A,"passport?",6)).isEqualTo(matches);
         runtime.calls.set(0);
-        runs.start(OWNER,A,AGENT_A,new RunInput("passport?",6),UUID.randomUUID());
-        assertThat(runtime.last.passages()).hasSize(7);
+        runtime.refs=List.of("S1","S2","S3","S4","S5","S6");
+        var result=runs.start(OWNER,A,AGENT_A,new RunInput("passport?",6),UUID.randomUUID());
+        assertThat(runtime.calls.get()).isEqualTo(1);
+        assertThat(runtime.last.passages()).hasSize(6);
         assertThat(runtime.last.passages().stream().mapToInt(p->p.text().codePointCount(0,p.text().length())).sum()).isLessThanOrEqualTo(8000);
+        assertThat(result.citations()).hasSize(6);
+        for(int i=0;i<6;i++) {
+            var match=matches.get(i);var passage=runtime.last.passages().get(i);var citation=result.citations().get(i);
+            assertThat(associated).contains(match.documentId());
+            assertThat(passage.sourceId()).isEqualTo("S"+(i+1));
+            assertThat(passage.text()).isEqualTo(match.text()).doesNotContain("UNASSOCIATED_PRIVATE","OTHER_TENANT_PRIVATE");
+            assertThat(citation.documentId()).isEqualTo(match.documentId());
+            assertThat(citation.chunkId()).isEqualTo(match.chunkId());
+            assertThat(citation.filename()).isEqualTo("admissions.txt");
+            assertThat(citation.sourcePage()).isEqualTo(match.sourcePage());
+        }
     }
     @Test void expiredJwtAndForgedTenantClaimsCannotAuthorizeExecution()throws Exception {
         var now=java.time.Instant.now();

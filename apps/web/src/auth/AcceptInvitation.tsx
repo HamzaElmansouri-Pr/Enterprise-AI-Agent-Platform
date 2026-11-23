@@ -73,7 +73,7 @@ export function AcceptInvitation({
                 required
                 minLength={43}
                 maxLength={43}
-                pattern="[A-Za-z0-9_-]{43}"
+                pattern="(?:[A-Za-z0-9_]|-){43}"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
               />

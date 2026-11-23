@@ -20,7 +20,7 @@ export function Tasks({ api }: { api: TenantApi }) {
     <>
       <Heading
         title="Admissions follow-up tasks"
-        description="Real database tasks created only through approved execution."
+        description="Internal follow-up work created through approved execution. Creating a task does not send an email or message."
         action={<button onClick={remote.refresh}>Refresh tasks</button>}
       />
       <ErrorNotice error={remote.error} />

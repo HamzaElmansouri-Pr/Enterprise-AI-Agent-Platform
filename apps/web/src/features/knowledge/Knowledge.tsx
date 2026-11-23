@@ -1,3 +1,4 @@
+import { FailureNotice } from "../../components/FailureNotice";
 import { safeFailure } from "../../api/failures";
 import { validateFile } from "./validation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,6 +35,7 @@ export function Knowledge({
     ),
   );
   const action = useAction();
+  const fileInput = useRef<HTMLInputElement>(null);
   const attempts = useRef(0);
   const { data, refresh } = remote;
   const active =
@@ -86,6 +88,7 @@ export function Knowledge({
                   "Document accepted. Processing is pending. No automatic retry will occur.",
                 );
                 setFile(null);
+                if (fileInput.current) fileInput.current.value = "";
               },
             );
           }}
@@ -99,6 +102,7 @@ export function Knowledge({
             <AgentSelect api={api} value={agent} onChange={setAgent} />
             <Field label="Document file">
               <input
+                ref={fileInput}
                 type="file"
                 accept=".pdf,.txt,application/pdf,text/plain"
                 aria-invalid={!!fileError}
@@ -200,6 +204,9 @@ function DocumentDetail({
   );
   const [agent, setAgent] = useState("");
   const action = useAction();
+  const names = useRemote(
+    useCallback((signal: AbortSignal) => api.agents(0, "", signal), [api]),
+  );
   const d = remote.data;
   const attempts = useRef(0),
     refresh = remote.refresh;
@@ -235,7 +242,7 @@ function DocumentDetail({
           <section className="card">
             <Id value={d.id} />
             <p>Chunks: {d.chunkCount}</p>
-            {d.failureCode && <p>Failure: {safeFailure(d.failureCode)}</p>}
+            {d.failureCode && <FailureNotice code={d.failureCode} />}
             <button onClick={remote.refresh}>Refresh status</button>
             {manager && d.status === "FAILED" && (
               <button
@@ -248,10 +255,23 @@ function DocumentDetail({
               </button>
             )}
             <h2>Associated agents</h2>
+            <p>
+              Only READY documents associated with an agent can support its
+              answers.
+            </p>
+            <ErrorNotice error={names.error} />
             {d.agentIds.length ? (
               d.agentIds.map((a) => (
                 <div className="association" key={a}>
-                  <Id value={a} />
+                  <div>
+                    <strong>
+                      {names.data?.items.find((item) => item.id === a)?.name ??
+                        "Associated agent"}
+                    </strong>
+                    <small>
+                      Agent ID: <Id value={a} />
+                    </small>
+                  </div>
                   {manager && (
                     <button
                       disabled={action.busy}
@@ -269,6 +289,14 @@ function DocumentDetail({
               ))
             ) : (
               <Empty>No associated agents.</Empty>
+            )}
+            {d.agentIds.some(
+              (a) => !names.data?.items.some((item) => item.id === a),
+            ) && (
+              <p>
+                Names are shown for the first page of accessible agents. Use the
+                Agents list and support ID to identify other associations.
+              </p>
             )}
             {d.hasMoreAgentIds && (
               <p>Only the first 100 associations are returned by this API.</p>

@@ -1,0 +1,154 @@
+{
+  "scenario": "atlas-learning-center",
+  "version": "atlas-v1",
+  "synthetic": true,
+  "documents": [
+    {
+      "filename": "registration.txt",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Registration opens 4 January 2027; deadline 25 January 2027.",
+        "Submit a registration form, passport copy and academic transcripts."
+      ],
+      "sha256": "51d99a0ed6420134d7f1e6f8acff0eb61e8e5dda38a6675c33f7cd40fb090d38",
+      "bytes": 354,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "english-fees.pdf",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "English beginner: 1800 MAD per 12-week term.",
+        "English academic preparation: 2600 MAD per 12-week term.",
+        "Materials cost 150 MAD separately."
+      ],
+      "sha256": "7be7aa48dc6a61ffaa66aff8c27a9de9353b9d551e781a21a19fd7179cd39e02",
+      "bytes": 933,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "french-fees.txt",
+      "language": "fr",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Français débutant: 1600 MAD par trimestre de 12 semaines.",
+        "Préparation académique française: 2400 MAD.",
+        "Supports: 150 MAD séparément."
+      ],
+      "sha256": "7975e8a89ed2f071e04fb48872a2bae841552871e1af5bd1c92f5744e13be1d2",
+      "bytes": 314,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "placement.txt",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Placement test required for non-beginners; free.",
+        "Beginners take an orientation interview instead."
+      ],
+      "sha256": "ff1959595edc3c510a79d3e2331d008a4bc4918f7b4143ad22a98af69ef763cf",
+      "bytes": 323,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "schedule.txt",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "English beginner: Monday and Wednesday 18:00–19:30.",
+        "French beginner: Tuesday and Thursday 18:00–19:30.",
+        "Academic preparation: Saturday 09:00–12:00."
+      ],
+      "sha256": "2ddb1fbb6e07c8c11a2e7965c33df85c6103bdd054d3d1236aadeafe8f6559f0",
+      "bytes": 304,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "refund.txt",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Cancellation before 1 February: tuition refund less 200 MAD administration.",
+        "No tuition refund from 1 February onward.",
+        "Used materials are not refundable."
+      ],
+      "sha256": "ff2c83cf3241bf01999cc3eca0d89bceb931d7941e061f7dfffb6a0ec96b8e53",
+      "bytes": 306,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "support.txt",
+      "language": "ar",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "دعم الطلاب يوم الجمعة من 14:00 إلى 16:00.",
+        "الدعم الأكاديمي مجاني للطلاب المسجلين."
+      ],
+      "sha256": "b8273f82c361ac1e1332550902b2b7b189bab99c88d324d3d32c307156c14df5",
+      "bytes": 303,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "followup.txt",
+      "language": "darija",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "خص الموظف يراجع نسخة الباسبور والنقط قبل المتابعة.",
+        "Only an approved internal follow-up task may be executed; no message is sent."
+      ],
+      "sha256": "3f26cd8e45346180b2d76aefeda877656fc4586825efbbf0554a6418208f35d8",
+      "bytes": 408,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "discount.txt",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Sibling discount: 10% tuition only.",
+        "Discount requires same-term registrations; cannot combine with scholarships."
+      ],
+      "sha256": "aa101dfcdacd90f22301f7610566409582db9153d80153a5e4c4c94b729c85b2",
+      "bytes": 298,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "scholarship.txt",
+      "language": "fr",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Deux bourses partielles fictives; décision le 29 janvier.",
+        "Dossier avant le 20 janvier; aucun cumul avec réduction fratrie."
+      ],
+      "sha256": "94feb3cc5a860d6aa0e49888814dcd2042af80a557ad228a505c902c73e193af",
+      "bytes": 262,
+      "deliberateConflict": false
+    },
+    {
+      "filename": "conflict-labelled.txt",
+      "language": "en",
+      "tenant": "atlas",
+      "expectedFacts": [
+        "Deliberately obsolete conflict fixture; English beginner 1700 MAD is NOT current."
+      ],
+      "sha256": "747347820df2ed55d346ee893ff1aaf6e32ebd6b1799ee02c20612c63816cd51",
+      "bytes": 304,
+      "deliberateConflict": true
+    },
+    {
+      "filename": "rif-policy.txt",
+      "language": "en",
+      "tenant": "rif",
+      "expectedFacts": [
+        "Rif Training Institute beginner English costs 2100 MAD.",
+        "Rif requires an identity card; this is not Atlas policy."
+      ],
+      "sha256": "7c2d3a9bc9d23336cf94bc2b7c17c7a12e284a077d327b7aabbdf736f8673c64",
+      "bytes": 229,
+      "deliberateConflict": false
+    }
+  ]
+}

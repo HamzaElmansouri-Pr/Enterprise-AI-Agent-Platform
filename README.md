@@ -156,3 +156,7 @@ Agent evaluation (EAAP-011): [synthetic benchmark CLI](evaluation/README.md) and
 EAAP-012 adds a separate HTTPS pilot profile with file-delivered secrets, private dependency networks and authenticated encrypted logical backup/restore. Start with [pilot operations](docs/engineering/pilot-deployment-operations.md), [recovery](docs/engineering/backup-and-disaster-recovery.md), [operational threat model](docs/security/operational-threat-model.md) and [privacy proposal](docs/security/data-retention-and-privacy.md). The normal development commands above retain their behavior. This foundation is pending architect acceptance and does not authorize a public deployment.
 
 EAAP-013 documents the supported Spring upgrade and layered login protection in [identity ingress operations](docs/engineering/identity-ingress-operations.md). The pilot keeps forwarded-header trust disabled; see [delivery evidence](docs/tasks/EAAP-013.md).
+
+## Synthetic business validation
+
+EAAP-014 adds the fictional Atlas Learning Center scenario: [reproducible HTTPS browser operations](docs/engineering/business-pilot-operations.md), [usability and product gaps](docs/product/pilot-usability-assessment.md), [architecture boundaries](docs/architecture/decisions/0013-business-pilot-and-product-validation.md) and [delivery evidence](docs/tasks/EAAP-014.md). It uses disposable tenant data, actual local semantic retrieval and explicitly synthetic model responses; it does not establish hosted answer quality or human usability.

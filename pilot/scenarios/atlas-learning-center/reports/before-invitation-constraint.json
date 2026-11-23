@@ -1,0 +1,33 @@
+{
+  "baseline": "693d8bd60d995287fba27ef2e5dbe89b7354d374",
+  "finding": "Invalid HTML pattern under Chromium Unicode sets; backend token validation unchanged",
+  "actualConsoleEvents": [
+    {
+      "message": "Pattern attribute value [A-Za-z0-9_-]{43} is not a valid regular expression: Uncaught SyntaxError: Invalid regular expression: /[A-Za-z0-9_-]{43}/v: Invalid character in character class",
+      "location": {
+        "url": "https://127.0.0.1:18743/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "message": "Pattern attribute value [A-Za-z0-9_-]{43} is not a valid regular expression: Uncaught SyntaxError: Invalid regular expression: /[A-Za-z0-9_-]{43}/v: Invalid character in character class",
+      "location": {
+        "url": "https://127.0.0.1:18743/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "dirty": true,
+  "phase": "before invitation-pattern fix; other focused EAAP-014 UX changes already applied",
+  "images": {
+    "control-plane": "sha256:c945616043f636a34f761af3d2db347f6ea75956d7d792c7849a1c2b67674846",
+    "agent-runtime": "sha256:1452fbc5ca5e0f25b8d0cf24988b563c7a96f167e640dde557bc2e7196c1651e",
+    "web": "sha256:13386216b390d0f5f40c99209b88eb762ac6a0c5635d7a4f1ebd6cf35d54023f"
+  }
+}

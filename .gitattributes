@@ -3,3 +3,5 @@ mvnw text eol=lf
 *.sh text eol=lf
 *.cmd text eol=crlf
 evaluation/datasets/**/fixtures/*.pdf binary
+# Preserve PDF bytes, including fixed-width xref records.
+pilot/scenarios/atlas-learning-center/fixtures/*.pdf binary

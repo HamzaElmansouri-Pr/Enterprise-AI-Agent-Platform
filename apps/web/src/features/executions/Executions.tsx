@@ -1,4 +1,4 @@
-import { safeFailure } from "../../api/failures";
+import { FailureNotice } from "../../components/FailureNotice";
 import { useState } from "react";
 import { ApiError } from "../../api/client";
 import { isUuid } from "../../api/contracts";
@@ -170,7 +170,7 @@ export function RunResult({ run }: { run: Run }) {
       </h2>
       <Id value={run.runId} />
       {run.answer && <p className="preserve">{run.answer}</p>}
-      {run.failureCode && <p>Failure: {safeFailure(run.failureCode)}</p>}
+      {run.failureCode && <FailureNotice code={run.failureCode} />}
       <dl className="facts">
         <div>
           <dt>Model</dt>

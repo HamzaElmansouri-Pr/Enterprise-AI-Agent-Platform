@@ -3,6 +3,7 @@ export function safeFailure(code: string | null) {
     "MODEL_UNAVAILABLE",
     "PROVIDER_TIMEOUT",
     "RUNTIME_UNAVAILABLE",
+    "RUNTIME_FAILURE",
     "INVALID_MODEL_OUTPUT",
     "INSUFFICIENT_KNOWLEDGE",
     "EXECUTION_FAILED",

@@ -84,7 +84,7 @@ export function Console({
           <div>
             <span className="eyebrow">TENANT WORKSPACE</span>
             <strong>
-              {context.tenantId.slice(0, 8)}…{" "}
+              <span className="identifier">{context.tenantId}</span>{" "}
               <span className="role">{context.role}</span>
             </strong>
           </div>

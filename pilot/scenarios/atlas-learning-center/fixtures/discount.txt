@@ -1,0 +1,1 @@
+Atlas Learning Center — synthetic discount policy. Sibling discount is 10% on tuition only when both siblings register for the same term. Materials are excluded. The sibling discount cannot combine with scholarships. Eligibility is manually reviewed; the agent cannot award or modify a discount.

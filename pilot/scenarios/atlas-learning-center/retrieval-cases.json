@@ -1,0 +1,62 @@
+[
+  {
+    "id": "atlas-01",
+    "language": "en",
+    "query": "Which documents must I submit to register?",
+    "expectedFilename": "registration.txt"
+  },
+  {
+    "id": "atlas-02",
+    "language": "en",
+    "query": "How much is English beginner tuition per term?",
+    "expectedFilename": "english-fees.pdf"
+  },
+  {
+    "id": "atlas-03",
+    "language": "fr",
+    "query": "Combien coûte le français débutant par trimestre ?",
+    "expectedFilename": "french-fees.txt"
+  },
+  {
+    "id": "atlas-04",
+    "language": "en",
+    "query": "When does the English beginner class meet?",
+    "expectedFilename": "schedule.txt"
+  },
+  {
+    "id": "atlas-05",
+    "language": "en",
+    "query": "Can I get a refund after the term starts?",
+    "expectedFilename": "refund.txt"
+  },
+  {
+    "id": "atlas-06",
+    "language": "en",
+    "query": "Is a placement test required for absolute beginners?",
+    "expectedFilename": "placement.txt"
+  },
+  {
+    "id": "atlas-07",
+    "language": "ar",
+    "query": "متى يكون دعم الطلاب وهل هو مجاني؟",
+    "expectedFilename": "support.txt"
+  },
+  {
+    "id": "atlas-08",
+    "language": "darija",
+    "query": "الملف ناقص شنو خص الموظف يراجع قبل المتابعة؟",
+    "expectedFilename": "followup.txt"
+  },
+  {
+    "id": "atlas-09",
+    "language": "fr",
+    "query": "Quelle est la date limite du dossier de bourse ?",
+    "expectedFilename": "scholarship.txt"
+  },
+  {
+    "id": "atlas-10",
+    "language": "en",
+    "query": "Can sibling discounts combine with scholarships?",
+    "expectedFilename": "discount.txt"
+  }
+]

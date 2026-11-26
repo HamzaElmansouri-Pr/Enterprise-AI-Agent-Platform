@@ -4,6 +4,41 @@ AI agent orchestration and management platform. The Spring control plane provide
 
 ## Run the complete local project
 
+For one-command local startup with a verified test login, run:
+
+```sh
+./runEAAP
+```
+
+If this checkout's launcher is installed in your `~/.local/bin`, simply type `runEAAP`.
+To install it once (with that directory already on your PATH):
+
+```sh
+mkdir -p "$HOME/.local/bin"
+# Only create the link if this command does not already exist; review an existing entry first.
+test -e "$HOME/.local/bin/runEAAP" || test -L "$HOME/.local/bin/runEAAP" || \
+  ln -s "$PWD/runEAAP" "$HOME/.local/bin/runEAAP"
+```
+
+The launcher requires Python 3, OpenSSL, Docker Compose and Buildx. It runs the
+existing `dev.sh up` workflow, mounts dedicated development signing files, and
+uses the existing offline bootstrap to create one synthetic OWNER and tenant.
+After login and tenant membership are verified through the frontend proxy, it
+prints the URL, email, password and tenant ID. Treat this terminal output as
+credentials; avoid recording it in shared logs. Existing users and data are
+preserved. Subsequent runs reuse the same account and keys; passwords are never
+silently reset. Do not delete the saved state to fix a login failure.
+
+Owner-only credentials and protected signing files live outside the checkout at
+`~/.local/state/eaap/<checkout-path-hash>/`. The signing directory/files grant
+only container group 10001 the required read access. Startup uses a lock to
+prevent two launcher runs provisioning concurrently and rejects remote Docker
+contexts. Moving the checkout creates separate launcher state. This is local
+development tooling: knowledge processing and hosted AI remain opt-in using the
+operations guides below. Use `./dev.sh down` to stop services without deleting data.
+`./dev.sh up` alone does not retain this launcher's signing override; use
+`runEAAP` again to restore enabled login.
+
 With Docker Engine, the modern Compose plugin, and Buildx installed, verify:
 
 ```sh

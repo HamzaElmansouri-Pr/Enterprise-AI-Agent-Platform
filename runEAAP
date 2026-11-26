@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+"""Start this repository's local stack and display a verified test OWNER."""
+
+import fcntl
+import hashlib
+import json
+import os
+import secrets
+import shutil
+import stat
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+import uuid
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+
+
+def run(args, **kwargs):
+    return subprocess.run(args, check=True, cwd=ROOT, timeout=1800, **kwargs)
+
+
+def secure_directory(path):
+    path.mkdir(parents=True, mode=0o700, exist_ok=True)
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+        raise ValueError("Local state must be a directory owned by the current user")
+    path.chmod(0o700)
+
+
+def credentials(path):
+    if path.is_symlink():
+        raise ValueError("Refusing a symbolic link for local credentials")
+    if path.exists():
+        info = path.stat()
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+            raise ValueError(
+                "Local credentials must be a file owned by the current user"
+            )
+        path.chmod(0o600)
+        data = json.loads(path.read_text())
+        for key in ("tenantId", "userId"):
+            uuid.UUID(data[key])
+        if (
+            not isinstance(data["password"], str)
+            or not 16 <= len(data["password"]) <= 128
+        ):
+            raise ValueError(
+                "Invalid saved local password; existing accounts are never reset"
+            )
+        if not isinstance(data["email"], str) or not data["email"].endswith(
+            "@example.test"
+        ):
+            raise ValueError(
+                "The launcher only provisions synthetic example.test accounts"
+            )
+        if (
+            not isinstance(data["tenantName"], str)
+            or not 1 <= len(data["tenantName"]) <= 200
+        ):
+            raise ValueError("Invalid saved tenant name")
+        return data
+    tenant = str(uuid.uuid4())
+    data = {
+        "email": "local-" + tenant + "@example.test",
+        "password": secrets.token_urlsafe(24),
+        "tenantId": tenant,
+        "userId": str(uuid.uuid4()),
+        "tenantName": "Local Testing",
+    }
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as output:
+        json.dump(data, output)
+    return data
+
+
+def verify(data, base="http://127.0.0.1:4173"):
+    # No token/body/error payload is printed, including when verification fails.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    request = urllib.request.Request(
+        base + "/api/v1/auth/login",
+        data=json.dumps({key: data[key] for key in ("email", "password")}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    with opener.open(request, timeout=20) as response:
+        login = json.load(response)
+    request = urllib.request.Request(
+        base + "/api/v1/tenants/" + data["tenantId"] + "/context",
+        headers={"Authorization": "Bearer " + login["accessToken"]},
+    )
+    with opener.open(request, timeout=15) as response:
+        context = json.load(response)
+    if (
+        any(context.get(key) != data[key] for key in ("tenantId", "userId"))
+        or context.get("role") != "OWNER"
+    ):
+        raise ValueError(
+            "Saved test account does not have the expected OWNER membership"
+        )
+
+
+def start(state):
+    secure_directory(state)
+    # Directory ownership/permissions keep the lock private, including existing files.
+    lock_path = state / "launcher.lock"
+    if lock_path.is_symlink():
+        raise ValueError("Refusing a symbolic launcher lock")
+    with lock_path.open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise ValueError("Another runEAAP startup is already running") from None
+        data = credentials(state / "login.json")
+        print("Starting the local EAAP stack; preserving existing data...", flush=True)
+        run([str(ROOT / "dev.sh"), "up"])
+        keys = state / "signing"
+        secure_directory(keys)
+        private, public = keys / "private.pem", keys / "public.pem"
+        if private.is_symlink() or public.is_symlink():
+            raise ValueError("Refusing symbolic signing files")
+        if private.exists() != public.exists():
+            raise ValueError(
+                "Incomplete signing pair; restore the saved keys before restarting"
+            )
+        if not private.exists():
+            run(
+                [
+                    "openssl",
+                    "genpkey",
+                    "-algorithm",
+                    "RSA",
+                    "-pkeyopt",
+                    "rsa_keygen_bits:3072",
+                    "-out",
+                    str(private),
+                ],
+                stderr=subprocess.DEVNULL,
+            )
+            run(
+                ["openssl", "pkey", "-in", str(private), "-pubout", "-out", str(public)]
+            )
+        # Grant container-group access only to this dedicated signing mount.
+        run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--user",
+                "0",
+                "--mount",
+                f"type=bind,source={keys},target=/keys",
+                "--entrypoint",
+                "sh",
+                "eaap-control-plane:0.0.1-dev",
+                "-c",
+                "chgrp 10001 /keys /keys/private.pem /keys/public.pem "
+                "&& chmod 750 /keys "
+                "&& chmod 640 /keys/private.pem /keys/public.pem",
+            ]
+        )
+        env = os.environ.copy()
+        # Ignore ambient Compose overrides for this dedicated local stack.
+        for key in (
+            "COMPOSE_FILE",
+            "COMPOSE_PROJECT_NAME",
+            "COMPOSE_PROFILES",
+            "COMPOSE_ENV_FILES",
+        ):
+            env.pop(key, None)
+        compose = [
+            "docker",
+            "compose",
+            "--env-file",
+            str(ROOT / ".env"),
+            "-f",
+            str(ROOT / "compose.yaml"),
+        ]
+        mapping = {
+            "BOOTSTRAP_EMAIL": "email",
+            "BOOTSTRAP_PASSWORD": "password",
+            "BOOTSTRAP_TENANT_ID": "tenantId",
+            "BOOTSTRAP_USER_ID": "userId",
+            "BOOTSTRAP_TENANT_NAME": "tenantName",
+        }
+        env.update({key: data[value] for key, value in mapping.items()})
+        bootstrap = compose + [
+            "-f",
+            str(ROOT / "compose.bootstrap.yaml"),
+            "run",
+            "--rm",
+            "--no-deps",
+        ]
+        for key in mapping:
+            bootstrap += ["-e", key]
+        run(bootstrap + ["control-plane"], env=env)
+        for key in mapping:
+            env.pop(key, None)
+        env.update(
+            AUTH_KEYS_DIR=str(keys),
+            AUTH_ISSUER="http://127.0.0.1:8080",
+            AUTH_AUDIENCE="eaap-control-plane",
+            AUTH_KEY_ID="local-launcher-1",
+        )
+        run(
+            compose
+            + [
+                "-f",
+                str(ROOT / "compose.auth.yaml"),
+                "up",
+                "-d",
+                "--no-deps",
+                "--wait",
+                "--wait-timeout",
+                "180",
+                "control-plane",
+            ],
+            env=env,
+        )
+        verify(data)
+        print("\nEAAP is ready: http://127.0.0.1:4173")
+        print("Email:     " + data["email"])
+        print("Password:  " + data["password"])
+        print("Tenant ID: " + data["tenantId"])
+        print("Role:      OWNER\nLog in, then paste the Tenant ID into the selector.")
+        print("Local credentials saved privately at: " + str(state / "login.json"))
+        print("Knowledge processing and hosted AI remain opt-in; see README.md.")
+
+
+def main():
+    if len(sys.argv) != 1:
+        raise ValueError("Usage: runEAAP (no arguments)")
+    for program in ("docker", "openssl"):
+        if not shutil.which(program):
+            raise ValueError(program + " is required; see README.md")
+    os.umask(0o077)
+    # Do not inherit an alternate daemon, project or file selection.
+    for key in (
+        "COMPOSE_FILE",
+        "COMPOSE_PROJECT_NAME",
+        "COMPOSE_PROFILES",
+        "COMPOSE_ENV_FILES",
+    ):
+        os.environ.pop(key, None)
+    if os.environ.get("DOCKER_HOST") or os.environ.get("DOCKER_CONTEXT"):
+        raise ValueError(
+            "Unset DOCKER_HOST/DOCKER_CONTEXT before starting this local-only launcher"
+        )
+    context = subprocess.check_output(
+        ["docker", "context", "inspect"], text=True, timeout=15
+    )
+    endpoint = json.loads(context)[0]["Endpoints"]["docker"]["Host"]
+    if not endpoint.startswith("unix://"):
+        raise ValueError("runEAAP requires a local Docker Unix socket context")
+    digest = hashlib.sha256(str(ROOT).encode()).hexdigest()[:16]
+    start(Path.home() / ".local" / "state" / "eaap" / digest)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (ValueError, KeyError, OSError, subprocess.SubprocessError) as error:
+        # Unexpected exceptions may include subprocess args or HTTP details.
+        print(
+            "runEAAP failed ("
+            + type(error).__name__
+            + "). Check startup output and README; accounts are never reset."
+            + (" " + str(error) if type(error) is ValueError else ""),
+            file=sys.stderr,
+        )
+        sys.exit(1)

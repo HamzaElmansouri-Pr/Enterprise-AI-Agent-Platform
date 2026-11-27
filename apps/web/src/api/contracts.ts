@@ -60,6 +60,12 @@ export const contextContract = object({
   role: choice("OWNER", "ADMIN", "MEMBER"),
 });
 export type TenantContext = ReturnType<typeof contextContract>;
+export const workspaceContract = object({
+  tenantId: uuid,
+  name: text,
+  role: choice("OWNER", "ADMIN", "MEMBER"),
+});
+export type Workspace = ReturnType<typeof workspaceContract>;
 export const agentContract = object({
   id: uuid,
   tenantId: uuid,

@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { TableScroll } from "../../components/ui";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ApiClient } from "../../api/client";
 import { contextContract } from "../../api/contracts";
 import type {
@@ -61,6 +62,28 @@ export function Team({
     ),
   );
   const data = remote.data;
+  const lastRefresh = useRef(0);
+  const refreshDirectory = remote.refresh;
+  useEffect(() => {
+    const refreshOnReturn = () => {
+      if (
+        document.visibilityState !== "visible" ||
+        action.busy ||
+        issued ||
+        confirmation ||
+        Date.now() - lastRefresh.current < 5000
+      )
+        return;
+      lastRefresh.current = Date.now();
+      refreshDirectory();
+    };
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => {
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
+  }, [refreshDirectory, action.busy, issued, confirmation]);
   function refresh() {
     setIssued(null);
     setCopyNotice("");
@@ -101,6 +124,12 @@ export function Team({
         }
       />
       <ErrorNotice error={remote.error} />
+      <p>
+        Access refreshes when you return to this tab (at most once per five
+        seconds). Use Refresh access after a colleague accepts. Copy and dismiss
+        a newly issued token first; automatic refresh pauses while it or a
+        confirmation is open.
+      </p>
       {remote.loading && <Loading />}
       {data && (
         <>
@@ -218,7 +247,7 @@ export function Team({
             </>
           )}
           <h2>Current members</h2>
-          <div className="table-wrap">
+          <TableScroll>
             <table>
               <thead>
                 <tr>
@@ -281,7 +310,7 @@ export function Team({
                 })}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {!data.members.items.length && (
             <Empty>No members on this page.</Empty>
           )}
@@ -296,7 +325,7 @@ export function Team({
           {data.invitations && (
             <>
               <h2>Invitations</h2>
-              <div className="table-wrap">
+              <TableScroll>
                 <table>
                   <thead>
                     <tr>
@@ -357,7 +386,7 @@ export function Team({
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </TableScroll>
               {!data.invitations.items.length && (
                 <Empty>No invitations on this page.</Empty>
               )}

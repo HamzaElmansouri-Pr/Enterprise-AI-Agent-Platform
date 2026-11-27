@@ -62,6 +62,7 @@ const report = {
   steps: {},
   requests: [],
   browserErrors: [],
+  networkFailures: [],
   expectedConsoleErrors: 0,
   screenshots: [],
   limitations: [
@@ -153,6 +154,13 @@ async function page() {
     );
     assert(!secrets.some((s) => s && r.url().includes(s)), "Secret in URL");
   });
+  p.on("requestfailed", (request) =>
+    report.networkFailures.push({
+      method: request.method(),
+      path: new URL(request.url()).pathname,
+      reason: request.failure()?.errorText ?? "unavailable",
+    }),
+  );
   pages.push(p);
   return p;
 }
@@ -273,8 +281,48 @@ async function login(p, role, email, password, tenant = c.tenants.atlas) {
   );
   secrets.push(result.accessToken);
   tokens[role] = result.accessToken;
-  await fill(p.getByLabel("Tenant UUID"), tenant);
-  await click(p.getByRole("button", { name: "Open workspace" }));
+  await expect(
+    p.getByRole("heading", { name: "Choose your organization", exact: true }),
+  ).toBeVisible();
+  const directory = await api(
+    p,
+    "GET",
+    "/api/v1/me/tenants",
+    undefined,
+    result.accessToken,
+  );
+  assert.equal(
+    directory.items.length,
+    1,
+    "Initial account must only discover its own organization",
+  );
+  assert.equal(directory.items[0].tenantId, tenant);
+  await expect(
+    p.getByRole("heading", { name: "Workspace overview" }),
+  ).toHaveCount(0);
+  if (role === "owner" && !report.namedSelectionCaptured) {
+    await p.setViewportSize({ width: 375, height: 1000 });
+    await expect(
+      p.getByRole("button", {
+        name: "Open " + directory.items[0].name,
+        exact: true,
+      }),
+    ).toBeVisible();
+    assert(
+      await p.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+    );
+    await shot(p, "organization-selection-375");
+    await p.setViewportSize({ width: 1440, height: 1000 });
+    report.namedSelectionCaptured = true;
+  }
+  await click(
+    p.getByRole("button", {
+      name: "Open " + directory.items[0].name,
+      exact: true,
+    }),
+  );
   await expect(
     p.getByRole("heading", { name: "Workspace overview" }),
   ).toBeVisible();
@@ -342,14 +390,44 @@ async function invite(owner, role, email) {
   await login(staff, role.toLowerCase(), email, c.staffPassword);
   assert.equal(contexts[role.toLowerCase()].role, role);
   passed("browser invite, new acceptance and independent " + role + " login");
+  // Returning to the inviter refreshes actual directory records, not a mock state.
+  await owner.waitForTimeout(5100);
+  await owner.bringToFront();
+  await owner.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(
+    owner
+      .getByRole("row")
+      .filter({ hasText: email })
+      .filter({ hasText: "ACCEPTED" }),
+  ).toBeVisible();
+  passed("directory refresh after external " + role + " invitation acceptance");
   return staff;
 }
 async function conversationArea(p) {
+  const recoverRead = !report.readOnlyRecoveryChecked;
+  if (recoverRead)
+    await p.route(
+      "**/api/v1/tenants/*/agents?*",
+      (route) => route.abort("connectionfailed"),
+      { times: 1 },
+    );
   await navigate(p, "Conversations");
+  if (recoverRead) {
+    await expect(p.getByRole("alert")).toContainText(
+      "Could not reach the service",
+    );
+    await click(p.getByRole("button", { name: "Refresh agents", exact: true }));
+  }
   await select(
     p.getByRole("combobox", { name: /Conversation agent/ }),
     agent.id,
   );
+  if (recoverRead) {
+    report.readOnlyRecoveryChecked = true;
+    passed(
+      "failed agent-list read recovers through deliberate GET refresh without a paid or business retry",
+    );
+  }
 }
 async function newConversation(p, title) {
   await conversationArea(p);
@@ -382,6 +460,26 @@ try {
   await owner.goto(c.url);
   await shot(owner, "login");
   await login(owner, "owner", "atlas-owner@example.test", c.ownerPassword);
+  const initialDirectory = await api(owner, "GET", "/api/v1/me/tenants");
+  assert.deepEqual(
+    initialDirectory.items.map((item) => item.tenantId),
+    [c.tenants.atlas],
+  );
+  await api(
+    owner,
+    "GET",
+    "/api/v1/me/tenants?userId=" + c.tenants.rif,
+    undefined,
+    tokens.owner,
+    400,
+  );
+  await expect(
+    owner.getByRole("region", { name: "Getting started", exact: true }),
+  ).toContainText("Not observed on these pages");
+  await shot(owner, "first-use-empty");
+  passed(
+    "single-tenant named discovery excludes other organizations and first-use guide shows real empty state",
+  );
   await shot(owner, "dashboard");
   const rifPage = await page();
   await login(
@@ -561,6 +659,9 @@ try {
     await expect(row.getByRole("status")).toHaveText("READY", {
       timeout: 120000,
     });
+    await expect(
+      owner.getByRole("status").filter({ hasText: /Document accepted/ }),
+    ).not.toContainText("pending");
     const ready = await api(
       owner,
       "GET",
@@ -574,6 +675,19 @@ try {
     });
   }
   await shot(owner, "knowledge");
+  await navigate(owner, "Overview");
+  await expect(
+    owner.getByRole("region", { name: "Getting started", exact: true }),
+  ).toContainText("Found in current records");
+  await expect(
+    owner.getByRole("region", { name: "Getting started", exact: true }),
+  ).toContainText("Availability is not checked here");
+  await shot(owner, "first-use-ready");
+  passed(
+    "first-use records reflect actual agent/associated READY knowledge without hosted availability claims; upload notice stays synchronized",
+  );
+  await navigate(owner, "Knowledge library");
+  await select(owner.getByRole("combobox", { name: /DRAFT agent/ }), agent.id);
   // Deliberately malformed PDF exercises the durable parsing failure, not HTTP validation.
   report.steps[journey] = (report.steps[journey] || 0) + 1;
   await owner.getByLabel("Document file").setInputFiles({
@@ -600,6 +714,9 @@ try {
   await brokenRow.getByRole("button", { name: "View document" }).click();
   await expect(
     owner.getByRole("button", { name: "Retry processing" }),
+  ).toBeVisible();
+  await expect(
+    owner.getByRole("alert").filter({ hasText: "Export a new, valid PDF" }),
   ).toBeVisible();
   await shot(owner, "ingestion-failure");
   passed("browser durable ingestion failure and explicit recovery control", {
@@ -773,6 +890,11 @@ try {
   assert.equal(invalid.result.answer, null);
   assert.equal(invalid.result.citations.length, 0);
   await expect(owner.getByText(/Failure:.*RUNTIME_FAILURE/)).toBeVisible();
+  await expect(
+    owner.getByText(
+      /No successful answer was produced. Ask an operator to review the saved outcome/,
+    ),
+  ).toBeVisible();
   await fill(
     owner.getByLabel("New conversation title"),
     "Reviewed Atlas inquiry",
@@ -1110,6 +1232,26 @@ try {
         await expect(owner.locator(".message-bubble")).toHaveCount(18);
       }
       await expect(owner.locator("#workspace-main .loading")).toHaveCount(0);
+      if (
+        width === 375 &&
+        (await owner
+          .getByRole("region", { name: "Scrollable records", exact: true })
+          .count())
+      ) {
+        const area = owner
+          .getByRole("region", { name: "Scrollable records", exact: true })
+          .first();
+        await expect(area).toHaveAttribute("tabindex", "0");
+        await area.focus();
+        await area.press("End");
+        await area.evaluate((element) => {
+          element.scrollLeft = element.scrollWidth;
+        });
+        assert(await area.evaluate((element) => element.scrollLeft > 0));
+        await expect(
+          owner.getByText(/On a narrow screen, scroll this table/).first(),
+        ).toBeVisible();
+      }
       assert(
         await owner.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -1161,6 +1303,84 @@ try {
   passed(
     "browser archived agent preserves history and prevents new conversations",
   );
+  // Join an existing global account to a second organization through the real
+  // invitation capability. No test SQL creates staff or cross-tenant membership.
+  const additional = await api(
+    rifPage,
+    "POST",
+    rifBase + "/invitations",
+    {
+      email: "atlas-employee@example.test",
+      role: "MEMBER",
+    },
+    tokens.rif,
+    201,
+  );
+  secrets.push(additional.token);
+  await click(
+    member.getByRole("button", { name: "Switch tenant", exact: true }),
+  );
+  await click(
+    member.getByRole("button", { name: "Accept an invitation", exact: true }),
+  );
+  await fill(member.getByLabel(/^Invitation token/), additional.token);
+  await response(member, "/invitations/accept-existing", () =>
+    click(
+      member.getByRole("button", { name: "Accept invitation", exact: true }),
+    ),
+  );
+  await expect(
+    member.getByRole("button", {
+      name: "Open Atlas Learning Center",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    member.getByRole("button", {
+      name: "Open Rif Training Institute",
+      exact: true,
+    }),
+  ).toBeVisible();
+  const joined = await api(
+    member,
+    "GET",
+    "/api/v1/me/tenants",
+    undefined,
+    tokens.member,
+  );
+  assert.deepEqual(
+    joined.items.map((item) => item.tenantId).sort(),
+    [c.tenants.atlas, c.tenants.rif].sort(),
+  );
+  assert(joined.items.every((item) => item.role === "MEMBER"));
+  await shot(member, "multiple-organizations");
+  await click(
+    member.getByRole("button", {
+      name: "Open Rif Training Institute",
+      exact: true,
+    }),
+  );
+  await expect(member.locator(".topbar")).toContainText(
+    "Rif Training Institute",
+  );
+  await expect(member.locator("#workspace-main")).not.toContainText(
+    "Atlas Admissions Assistant",
+  );
+  await click(
+    member.getByRole("button", { name: "Switch tenant", exact: true }),
+  );
+  await click(
+    member.getByRole("button", {
+      name: "Open Atlas Learning Center",
+      exact: true,
+    }),
+  );
+  await expect(member.locator(".topbar")).toContainText(
+    "Atlas Learning Center",
+  );
+  passed(
+    "multiple-tenant existing-account acceptance and named switching clear prior workspace data",
+  );
   await api(
     owner,
     "DELETE",
@@ -1173,6 +1393,48 @@ try {
   await expect(member.getByRole("alert")).toContainText("permission");
   passed(
     "revoked membership denies existing JWT and displays accurate UI error",
+  );
+  await click(
+    member.getByRole("button", { name: "Switch tenant", exact: true }),
+  );
+  await expect(
+    member.getByRole("button", {
+      name: "Open Rif Training Institute",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    member.getByRole("button", {
+      name: "Open Atlas Learning Center",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const revokedDirectory = await api(
+    member,
+    "GET",
+    "/api/v1/me/tenants",
+    undefined,
+    tokens.member,
+  );
+  assert.deepEqual(
+    revokedDirectory.items.map((item) => item.tenantId),
+    [c.tenants.rif],
+  );
+  await shot(member, "revoked-organization-disappears");
+  await api(
+    rifPage,
+    "DELETE",
+    rifBase + "/members/" + contexts.member.userId,
+    undefined,
+    tokens.rif,
+  );
+  await click(
+    member.getByRole("button", { name: "Refresh organizations", exact: true }),
+  );
+  await expect(member.getByText(/No organizations on this page/)).toBeVisible();
+  await shot(member, "no-memberships");
+  passed(
+    "revoked memberships disappear immediately on discovery refresh; no-membership account is not auto-opened",
   );
   for (const p of pages)
     assert.deepEqual(

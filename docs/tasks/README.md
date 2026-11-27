@@ -73,4 +73,8 @@ Recommended next task, subject to architect approval: resolve build/package tool
 
 ## EAAP-014 — Business pilot and product validation
 
+The later approved [EAAP-015 task](EAAP-015.md) accepts EAAP-000–014 and authorizes
+guided onboarding and controlled pilot preparation. It does not authorize paid
+inference, deletion or EAAP-016; independent review remains required.
+
 EAAP-000–013 are accepted. [Implementation and verification evidence](EAAP-014.md) covers the fictional Atlas Learning Center, reproducible HTTPS Chromium workflows, local retrieval, bounded synthetic model contracts, persisted approval/execution and focused demonstrated UX fixes. [ADR 0013](../architecture/decisions/0013-business-pilot-and-product-validation.md) preserves existing boundaries. Independent product, architecture and security review is required; no EAAP-015 or paid-provider experiment is authorized.

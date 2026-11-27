@@ -1,3 +1,4 @@
+import { TableScroll } from "../../components/ui";
 import { FailureNotice } from "../../components/FailureNotice";
 import { safeFailure } from "../../api/failures";
 import { validateFile } from "./validation";
@@ -85,7 +86,7 @@ export function Knowledge({
                 attempts.current = 0;
                 remote.refresh();
                 action.setNotice(
-                  "Document accepted. Processing is pending. No automatic retry will occur.",
+                  "Document accepted. The library shows its latest processing status. No automatic retry will occur.",
                 );
                 setFile(null);
                 if (fileInput.current) fileInput.current.value = "";
@@ -145,7 +146,7 @@ export function Knowledge({
       {remote.loading && <Loading />}
       {remote.data && (
         <>
-          <div className="table-wrap">
+          <TableScroll>
             <table>
               <thead>
                 <tr>
@@ -178,7 +179,7 @@ export function Knowledge({
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {!remote.data.items.length && (
             <Empty>No documents on this page.</Empty>
           )}

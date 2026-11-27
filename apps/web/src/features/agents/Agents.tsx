@@ -1,3 +1,4 @@
+import { TableScroll } from "../../components/ui";
 import { useCallback, useState } from "react";
 import type { Agent } from "../../api/contracts";
 import type { AgentInput, TenantApi } from "../../api/tenant";
@@ -81,7 +82,7 @@ export function Agents({ api, manager }: { api: TenantApi; manager: boolean }) {
       {remote.loading && <Loading />}
       {remote.data && (
         <>
-          <div className="table-wrap">
+          <TableScroll>
             <table>
               <thead>
                 <tr>
@@ -113,7 +114,7 @@ export function Agents({ api, manager }: { api: TenantApi; manager: boolean }) {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {!remote.data.items.length && (
             <Empty>
               No agents on this page. Managers can create a DRAFT configuration.

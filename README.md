@@ -159,4 +159,17 @@ EAAP-013 documents the supported Spring upgrade and layered login protection in 
 
 ## Synthetic business validation
 
+EAAP-015 adds authenticated, bounded organization discovery and a first-use guide.
+After signing in, choose an organization by name and current role; the server
+still verifies membership before entry. Manual tenant UUID entry remains a support
+fallback. Apply V9 offline before using this version; do not edit earlier
+migrations or use development data as acceptance fixtures.
+See [onboarding operations](docs/engineering/onboarding-and-tenant-operations.md),
+[ADR0014](docs/architecture/decisions/0014-guided-onboarding-and-tenant-discovery.md),
+[privacy lifecycle design](docs/security/privacy-lifecycle-implementation-plan.md),
+[human usability protocol](docs/product/human-usability-test-plan.md),
+[hosted-quality plan](docs/product/hosted-quality-evaluation-plan.md) and
+[EAAP-015 evidence](docs/tasks/EAAP-015.md). The studies are prepared, not executed;
+no paid inference is authorized by this milestone.
+
 EAAP-014 adds the fictional Atlas Learning Center scenario: [reproducible HTTPS browser operations](docs/engineering/business-pilot-operations.md), [usability and product gaps](docs/product/pilot-usability-assessment.md), [architecture boundaries](docs/architecture/decisions/0013-business-pilot-and-product-validation.md) and [delivery evidence](docs/tasks/EAAP-014.md). It uses disposable tenant data, actual local semantic retrieval and explicitly synthetic model responses; it does not establish hosted answer quality or human usability.

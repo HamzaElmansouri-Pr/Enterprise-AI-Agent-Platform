@@ -72,7 +72,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE,"/api/v1/tenants/*/members/*").authenticated()
                         .requestMatchers(conversationWrites).authenticated()
                         .requestMatchers(HttpMethod.GET,"/api/v1/tenants/*/agents/*/conversations","/api/v1/tenants/*/agents/*/conversations/*","/api/v1/tenants/*/agents/*/conversations/*/messages","/api/v1/tenants/*/agents/*/conversations/*/requests/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/tenants/*/context").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/me/tenants", "/api/v1/tenants/*/context").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tenants/*/agents", "/api/v1/tenants/*/agents/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/tenants/*/agents", "/api/v1/tenants/*/agents/*/archive").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/tenants/*/agents/*").authenticated()
@@ -99,7 +99,7 @@ public class SecurityConfiguration {
                 })).authenticationEntryPoint((request, response, exception) -> error(response, 401, "unauthorized")))
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, exception) -> {
-                            boolean tenant = request.getRequestURI().startsWith("/api/v1/tenants/") || request.getRequestURI().equals("/api/v1/invitations/accept-existing");
+                            boolean tenant = request.getRequestURI().equals("/api/v1/me/tenants") || request.getRequestURI().startsWith("/api/v1/tenants/") || request.getRequestURI().equals("/api/v1/invitations/accept-existing");
                             error(response, tenant ? 401 : 403, tenant ? "unauthorized" : "access_denied");
                         })
                         .accessDeniedHandler((request, response, exception) -> error(response, 403, "access_denied")))

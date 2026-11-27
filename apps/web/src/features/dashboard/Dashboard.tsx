@@ -11,6 +11,7 @@ import {
   Status,
 } from "../../components/ui";
 import { DocumentSummary } from "../knowledge/Knowledge";
+import { FirstUseGuide } from "./FirstUseGuide";
 export function Dashboard({
   api,
   context,
@@ -23,14 +24,17 @@ export function Dashboard({
   const remote = useRemote(
     useCallback(
       async (signal: AbortSignal) => {
-        const [agents, documents, proposals] = await Promise.all([
+        const [agents, documents, proposals, invitations] = await Promise.all([
           api.agents(0, "", signal),
           api.documents(0, signal),
           api.proposals(0, signal),
+          context.role === "MEMBER"
+            ? Promise.resolve(null)
+            : api.invitations(0, signal),
         ]);
-        return { agents, documents, proposals };
+        return { agents, documents, proposals, invitations };
       },
-      [api],
+      [api, context.role],
     ),
   );
   return (
@@ -38,10 +42,14 @@ export function Dashboard({
       <Heading
         title="Workspace overview"
         description="Your tenant’s agents, knowledge and pending operational work."
+        action={<button onClick={remote.refresh}>Refresh overview</button>}
       />
       <section className="card">
         <p className="eyebrow">CURRENT TENANT</p>
-        <Id value={context.tenantId} />
+        <details>
+          <summary>Support identifier</summary>
+          <Id value={context.tenantId} />
+        </details>
         <p>
           Current role: <strong>{context.role}</strong>
         </p>
@@ -51,6 +59,17 @@ export function Dashboard({
       {remote.loading && <Loading />}
       {remote.data && (
         <>
+          <FirstUseGuide
+            context={context}
+            agents={remote.data.agents.items}
+            documents={remote.data.documents.items}
+            invitationFound={
+              remote.data.invitations
+                ? remote.data.invitations.items.length > 0
+                : null
+            }
+            navigate={navigate}
+          />
           <div className="summary-grid">
             <section className="card">
               <p className="eyebrow">ACCESSIBLE AGENTS</p>

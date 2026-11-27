@@ -192,6 +192,13 @@ export function RunResult({ run }: { run: Run }) {
         </div>
       </dl>
       <h3>Source citations</h3>
+      {run.citations.length > 0 && (
+        <p>
+          Check the filename and page against the original authorized document.
+          Citations are evidence references, not a guarantee of accuracy. This
+          console has no source-file download.
+        </p>
+      )}
       {!run.citations.length && <p>No citations available.</p>}
       {run.citations.map((c) => (
         <div key={c.chunkId}>

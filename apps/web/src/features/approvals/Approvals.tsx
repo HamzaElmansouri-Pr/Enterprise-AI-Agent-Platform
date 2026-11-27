@@ -1,3 +1,4 @@
+import { TableScroll } from "../../components/ui";
 import { safeFailure } from "../../api/failures";
 import { useCallback, useState } from "react";
 import type { Proposal, TenantContext } from "../../api/contracts";
@@ -85,7 +86,7 @@ export function Approvals({
       {remote.loading && <Loading />}
       {remote.data && (
         <>
-          <div className="table-wrap">
+          <TableScroll>
             <table>
               <thead>
                 <tr>
@@ -143,7 +144,7 @@ export function Approvals({
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {!remote.data.items.length && (
             <Empty>No visible proposals on this page.</Empty>
           )}

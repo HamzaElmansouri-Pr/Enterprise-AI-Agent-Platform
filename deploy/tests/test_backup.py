@@ -71,6 +71,19 @@ class BackupTest(unittest.TestCase):
         self.assertEqual(self.archive.stat().st_mode & 0o777, 0o600)
         self.assertNotIn(b"synthetic-test-only", self.archive.read_bytes())
 
+    def test_v9_manifest_is_accepted_while_v8_archives_remain_readable(self):
+        for version in ("8", "9"):
+            with (
+                self.subTest(version=version),
+                tempfile.TemporaryDirectory() as destination,
+            ):
+                package = self.path / ("schema-" + version + ".tar")
+                backup.pack(
+                    self.dump, {**self.manifest, "schemaVersion": version}, package
+                )
+                manifest, _ = backup.unpack(package, destination)
+                self.assertEqual(version, manifest["schemaVersion"])
+
     def test_wrong_key_corruption_and_truncation_rejected(self):
         for case in ("wrong-key", "corrupt", "truncated"):
             with self.subTest(case=case):
@@ -118,7 +131,9 @@ class BackupTest(unittest.TestCase):
 
     def test_schema_extension_version_and_digest_rejected(self):
         for name, value in (
-            ("schemaVersion", "9"),
+            ("schemaVersion", "10"),
+            ("schemaVersion", ["9"]),
+            ("schemaVersion", None),
             ("postgresMajor", 18),
             ("vectorVersion", "0.9"),
             ("dumpSha256", "bad"),

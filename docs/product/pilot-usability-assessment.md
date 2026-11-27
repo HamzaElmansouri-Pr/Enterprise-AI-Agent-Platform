@@ -40,9 +40,9 @@ The completed local acceptance established no P0 defect in the tested journeys; 
 
 Existing authentication has no account recovery, mailbox verification or general tenant lifecycle UI. Deployment remains a single-host pilot with documented backup limits, no HA/PITR guarantee, no external penetration-test claim and the accepted upstream security limitations from EAAP-013. Automation cannot decide whether those are acceptable for a real customer.
 
-## Recommendation
+## EAAP-014 recommendation (historical)
 
-After independent EAAP-014 review, define a milestone for guided onboarding, customer-facing failure recovery, approved privacy operations and a small explicitly budgeted hosted-answer evaluation plus observed human usability sessions. Obtain product/architecture approval before implementation. EAAP-015 has not been started.
+After independent EAAP-014 review, define a milestone for guided onboarding, customer-facing failure recovery, approved privacy operations and a small explicitly budgeted hosted-answer evaluation plus observed human usability sessions. The EAAP-015 results below supersede the onboarding gaps in this historical recommendation.
 
 
 ## Completed evidence and visual inspection
@@ -58,3 +58,44 @@ Actual final Chromium screenshots were opened and inspected, including:
 The inspected samples show visible field labels, wrapped message/citation text, clear synthetic answers, real READY/FAILED/APPROVED/OPEN/CLOSED states and usable navigation. All nine areas were also driven at each width with page-overflow assertions. Tables retain intentional internal horizontal scrolling; this is not a claim of zero horizontal scrolling within tables. Keyboard coverage includes dialog Escape, restored trigger focus and normal browser form validation; no full screen-reader audit or WCAG certification is claimed.
 
 Before-fix evidence: [PDF failure detail](../../pilot/scenarios/atlas-learning-center/reports/screenshots/before-ingestion-failure.png), [retained upload selection](../../pilot/scenarios/atlas-learning-center/reports/screenshots/before-knowledge.png), [actual invalid-pattern console events](../../pilot/scenarios/atlas-learning-center/reports/before-invitation-constraint.json). No screenshots contain passwords, JWTs or invitation tokens. `team.png` captures the earlier inviter view before external acceptance was refreshed; use the final responsive team captures for the current directory.
+
+## EAAP-015 focused follow-up — 2026-11-27
+
+[New machine evidence](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/acceptance.json)
+and [workflow results](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/acceptance.md)
+record 39 passing named groups: all original 32 plus seven onboarding/recovery
+groups. There were zero uncaught JavaScript or unexpected console errors and
+47 actual screenshots. Expected negative HTTP/fault console events and cancelled
+reads are recorded separately. No paid inference or human study occurred.
+
+| Earlier gap | Verified improvement | Remaining limit |
+| --- | --- | --- |
+| UX-04 UUID-only organization selection | Authenticated names/current roles, explicit choice, fresh context verification and secondary support IDs. Real second-membership acceptance/switching and revocation were exercised. | Duplicate/stale names may require the support ID and refresh. No public signup or automatic selection. |
+| UX-10 stale PENDING upload notice | Accepted-upload copy points to the authoritative row; real uploads reached READY/nonzero chunks without a stale pending claim. | Processing remains asynchronous and bounded refresh can stop; manual refresh remains. |
+| UX-11 external acceptance refresh | Return/focus refresh exposed independently accepted ADMIN and MEMBER records. Manual refresh retained; issued tokens/confirmation/write pause automatic refresh. | No real-time subscription or background unbounded polling. |
+| UX-12 hidden table actions | Visible sideways-scroll instructions, focusable scroll region and clear focus outline; narrow view scrolled to actual management controls. | Tables still scroll internally. This is not a full accessibility certification. |
+| UX-07 dense operation concepts | State-based first-use guide, named primary workspace label, clearer citations/lifecycle/permission guidance. | The seven-step guide is long on a phone; comprehension and assistance needs require human observation. Source-byte viewing remains absent. |
+| Failed agent lookup | A real transport failure showed an error; an explicit Refresh agents GET recovered the selector. No automatic write/model retry. | Persistent service failures still require operator investigation. |
+
+Opened and visually inspected the final [375 px named picker](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/organization-selection-375.png),
+[multiple organizations](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/multiple-organizations.png),
+[empty guide](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/first-use-empty.png),
+[375 px populated overview at original resolution](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/viewport-375-overview.png),
+[375 px team actions and focus](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/viewport-375-team-access.png),
+[768 px library](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/viewport-768-knowledge-library.png),
+[1440 px conversation/citations](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/viewport-1440-conversations.png)
+and [failed ingestion guidance](../../pilot/scenarios/atlas-learning-center/reports/eaap-015/screenshots/ingestion-failure.png).
+Names, role/state badges, ordinary text rendering, wrapping and support details
+are visible. The team capture intentionally shows the focused table scrolled to
+its action columns; the skip link is visible in that keyboard-focus condition.
+DOM/browser assertions also covered all nine areas at all three widths with no
+page-level overflow. Captures alone do not establish human comprehension.
+
+Earlier engineering attempts are not counted as passing acceptance: a failed
+agent-list read exposed the missing explicit recovery button, which was added
+and tested. The final run was isolated from concurrent Docker lifecycle drills;
+the earlier network failure's root cause is not asserted as proven. Hosted answer
+quality, fluent multilingual assessment and real first-time-user outcomes remain
+unmeasured. See the [human protocol](human-usability-test-plan.md),
+[hosted experiment plan](hosted-quality-evaluation-plan.md) and
+[EAAP-015 report](../tasks/EAAP-015.md) for the independent review boundaries.

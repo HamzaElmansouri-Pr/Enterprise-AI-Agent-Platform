@@ -45,7 +45,18 @@ The protected input file contains generated passwords; never print, copy into do
 
 ## Business walkthrough and roles
 
-The generated Atlas OWNER signs in and verifies the assigned tenant UUID. OWNER invites `atlas-manager@example.test` as ADMIN and `atlas-employee@example.test` as MEMBER. Separate browser contexts accept each invitation through the new-account form, then log in independently; no staff are inserted with SQL. Roles are verified from current server context. The Rif OWNER uses its own tenant and distinct policy.
+The generated Atlas OWNER signs in, chooses Atlas by its discovered name and verifies current membership through the existing context endpoint. OWNER invites `atlas-manager@example.test` as ADMIN and `atlas-employee@example.test` as MEMBER. Separate browser contexts accept each invitation through the new-account form, then log in independently; no staff are inserted with SQL. Roles are verified from current server context. The Rif OWNER uses its own tenant and distinct policy.
+
+EAAP-015 retains the original 32 named groups and adds discovery, state-based
+guidance, invitation return-refresh, explicit read-only lookup recovery and
+multiple-membership/switch/revocation checks. A fresh scenario grants a second
+membership only through real invitation acceptance, then revokes both in the
+dedicated synthetic scenario. No real account is changed. The harness injects
+one failed agent-list transport read and verifies a deliberate GET refresh;
+no successful API result is fabricated and no write/model retry is automatic.
+Run Chromium acceptance sequentially with Docker network lifecycle rehearsals
+to avoid unrelated host network-change events. Network failures are recorded
+with safe method/path/reason diagnostics, never request bodies or credentials.
 
 OWNER creates **Atlas Admissions Assistant** using the actual DRAFT schema. DRAFT is already usable; there is no publishing step. Upload the versioned TXT/PDF fixtures, select this agent, watch PENDING to READY and check nonzero chunks. A malformed synthetic PDF proves durable FAILED with repair guidance. Search EN/FR/Arabic/Darija queries using real local embeddings/pgvector, remove an association and prove exclusion, then restore it. The obsolete conflict file is deliberately labeled; never treat it as the current tuition policy.
 

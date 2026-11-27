@@ -1,3 +1,4 @@
+import { TableScroll } from "../../components/ui";
 import { useCallback, useState } from "react";
 import type { TenantApi } from "../../api/tenant";
 import { useRemote } from "../../components/hooks";
@@ -27,7 +28,7 @@ export function Tasks({ api }: { api: TenantApi }) {
       {remote.loading && <Loading />}
       {remote.data && (
         <>
-          <div className="table-wrap">
+          <TableScroll>
             <table>
               <thead>
                 <tr>
@@ -65,7 +66,7 @@ export function Tasks({ api }: { api: TenantApi }) {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {!remote.data.items.length && (
             <Empty>
               No follow-up tasks on this page. Creating or approving a proposal

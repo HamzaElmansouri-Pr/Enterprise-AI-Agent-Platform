@@ -49,8 +49,8 @@ Open `http://127.0.0.1:5173`. Relative browser requests are proxied by Vite to f
 ## Login and tenant selection
 
 1. Enter your existing email/password at Sign in. Invalid credentials show a generic message.
-2. Enter the existing tenant UUID obtained from your operator. Open workspace calls Spring's context endpoint and verifies live membership before showing data and role.
-3. Switch tenant returns to UUID verification and clears the previous workspace and pending requests. Sign out clears the token and all tenant data. Reload also requires signing in again.
+2. Choose your organization by name and current role from the authenticated bounded directory. Opening it calls Spring's context endpoint and verifies live membership. Manual UUID entry remains a support fallback.
+3. Switch tenant returns to fresh organization discovery and clears the previous workspace, pending requests and cost acknowledgement. Sign out clears the token and all tenant data. Reload requires signing in again. See [guided onboarding](onboarding-and-tenant-operations.md).
 4. Sessions last at most15minutes. HTTP401 or local expiry returns to login with an expiry message. There are no refresh tokens, cookies or browser storage.
 
 ## Agent walkthrough

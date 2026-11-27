@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { agent, context, page, response, tenant } from "./tests/fixtures";
@@ -38,7 +44,7 @@ async function login() {
     target: { value: "synthetic-test-password" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-  await screen.findByRole("heading", { name: "Select your tenant" });
+  await screen.findByRole("heading", { name: "Choose your organization" });
 }
 async function select() {
   fireEvent.change(screen.getByLabelText("Tenant UUID"), {
@@ -141,7 +147,7 @@ describe("authentication and tenant lifecycle", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tool proposals" }));
     await waitFor(() => expect(pendingSignal).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "Switch tenant" }));
-    await screen.findByRole("heading", { name: "Select your tenant" });
+    await screen.findByRole("heading", { name: "Choose your organization" });
     expect(pendingSignal?.aborted).toBe(true);
     expect(screen.queryByText("Admissions Assistant")).toBeNull();
   });
@@ -186,13 +192,14 @@ it("local token lifetime expires without making another API call", async () => {
       fireEvent.click(screen.getByRole("button", { name: "Sign in" })),
     );
     expect(
-      screen.getByRole("heading", { name: "Select your tenant" }),
+      screen.getByRole("heading", { name: "Choose your organization" }),
     ).toBeTruthy();
+    const requestsBeforeExpiry = fetcher.mock.calls.length;
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100);
     });
     expect(screen.getByRole("heading", { name: "Welcome back" })).toBeTruthy();
-    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher).toHaveBeenCalledTimes(requestsBeforeExpiry);
   } finally {
     vi.useRealTimers();
   }

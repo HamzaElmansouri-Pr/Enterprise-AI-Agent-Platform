@@ -243,6 +243,11 @@ def drill(source_config, destination_directory, report):
             .strip()
         )
         client.token = client.login("owner@example.test", password)
+        directory = client.api("GET", "/me/tenants")
+        assert directory["items"] == [
+            {"tenantId": tenant, "name": "Synthetic pilot only", "role": "OWNER"}
+        ]
+        evidence["checks"]["sourceDiscoveryExcludesOtherTenant"] = "pass"
         records = fixture(client)
         evidence["checks"]["httpsBusinessFlows"] = "pass"
         check_private_logs(source, client.tokens, password)
@@ -310,6 +315,21 @@ def drill(source_config, destination_directory, report):
         )
         recovered.token = recovered.login("owner@example.test", password)
         assert recovered.api("GET", recovered.prefix + "/context")["role"] == "OWNER"
+        assert recovered.api("GET", "/me/tenants")["items"] == directory["items"]
+        assert (
+            destination.sql("""
+            SELECT NOT has_table_privilege('eaap_runtime','platform.users','SELECT')
+              AND NOT has_table_privilege(
+                  'eaap_runtime','platform.tenant_memberships','SELECT')
+              AND has_function_privilege('eaap_runtime',
+                  'platform.discover_tenants(uuid,integer,bigint)','EXECUTE')
+              AND EXISTS(SELECT 1 FROM pg_proc WHERE oid=
+                         'platform.discover_tenants(uuid,integer,bigint)'::regprocedure
+                         AND prosecdef AND proowner='eaap_migration'::regrole)
+            """)
+            == "t"
+        )
+        evidence["checks"]["restoredDiscoveryAndNarrowIdentityPrivileges"] = "pass"
         recovered.agent = records["agent"]
         recovered.agent_path = recovered.prefix + "/agents/" + recovered.agent
         doc = recovered.api(

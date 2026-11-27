@@ -1,0 +1,81 @@
+{
+  "dateUtc": "2026-11-27",
+  "scope": "Actual local completed runs; raw logs retained externally, not copied with environment or test credentials. Java command runs from services/control-plane. Semicolon denotes separately executed commands.",
+  "java": {
+    "javaUnit": {
+      "tests": 100,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "javaPostgresqlIntegration": {
+      "tests": 185,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "pythonTests": 118,
+  "frontendTests": 105,
+  "frontendFiles": 10,
+  "evaluationUnitTests": 48,
+  "pilotUnitTests": 4,
+  "deploymentUnitTests": 19,
+  "checks": [
+    {
+      "name": "java.log",
+      "command": "JAVA_HOME=$EAAP015_STATE/jdk MAVEN_USER_HOME=$EAAP015_STATE/maven ./mvnw -B -ntp -Dmaven.repo.local=$EAAP015_STATE/m2 verify",
+      "result": "pass",
+      "logSha256": "9046e1aa24a12ca6c72780a8c6ce63df94ad48e65c9529acf4189faa3a97b1ec"
+    },
+    {
+      "name": "web-tests.log",
+      "command": "npm --prefix apps/web test",
+      "result": "pass",
+      "logSha256": "0603e261ab5f487d9c29fefde54665c4ca217a1b19301650a719619012b98aa9"
+    },
+    {
+      "name": "web-lint.log",
+      "command": "npm --prefix apps/web run lint",
+      "result": "pass",
+      "logSha256": "d44ffeafb8e5123e617d4b03fdca90f247dd79368e8c23c712931fb89fc5fa74"
+    },
+    {
+      "name": "web-types.log",
+      "command": "npm --prefix apps/web run typecheck",
+      "result": "pass",
+      "logSha256": "eb8ecbc0f5e08113a6ad67bbce2eb062d8450f0a206d4cd359de165b19e7cb50"
+    },
+    {
+      "name": "web-build.log",
+      "command": "npm --prefix apps/web run build",
+      "result": "pass",
+      "logSha256": "77f4532ed52cf041f9025b0b71b73931c2d0968a4bb44c4ee27d592ea2631f52"
+    },
+    {
+      "name": "python-tests.log",
+      "command": ".venv/bin/python -m pytest services/agent-runtime",
+      "result": "pass",
+      "logSha256": "d64aa3341b0cd94f8d3ff02713cb72d9a66afb7b7183b754d22a90c55ad58d55"
+    },
+    {
+      "name": "evaluation-unit.log",
+      "command": "python3 -m unittest discover -s evaluation/tests -v",
+      "result": "pass",
+      "logSha256": "bad0b3685384c9b4bd8d7c58fc7eba2550aba0ea418c9ecbea887204507d07cc"
+    },
+    {
+      "name": "pilot-unit.log",
+      "command": "python3 -m unittest discover -s pilot/tests -v",
+      "result": "pass",
+      "logSha256": "eb888ee53afc89bd7d1f2d718ef2ce4e037c9ac88c164076c4ca9fb127df351b"
+    },
+    {
+      "name": "deploy.log",
+      "command": "python3 -m unittest discover -s deploy/tests -v; python3 -m deploy.scripts.check",
+      "result": "pass",
+      "logSha256": "4d67bcb1105c34afa33560303494e155431da2a6f18a7da6e69db2fe83c0e2cd"
+    }
+  ],
+  "paidProviderCalls": 0
+}

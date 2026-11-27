@@ -1,0 +1,17 @@
+{
+  "recoverySource": {
+    "control-plane": "sha256:26726e262f9230288fb4832d905fade9cd1025af7bfccdd3a09f6d6a84d69f76",
+    "agent-runtime": "sha256:65526b436cbea53e53a6df55b3cbb4f6fcdf755984e48b7b5905b846f16d10a0",
+    "web": "sha256:2aa4b6a6bfd6bba7204c72c46067b7ebe67435ea2737dd81d910f53226e2d05d"
+  },
+  "recoveryDestination": {
+    "control-plane": "sha256:26726e262f9230288fb4832d905fade9cd1025af7bfccdd3a09f6d6a84d69f76",
+    "agent-runtime": "sha256:65526b436cbea53e53a6df55b3cbb4f6fcdf755984e48b7b5905b846f16d10a0",
+    "web": "sha256:2aa4b6a6bfd6bba7204c72c46067b7ebe67435ea2737dd81d910f53226e2d05d"
+  },
+  "finalBrowser": {
+    "control-plane": "sha256:6fab3ae96363592b0b77150956d83b74914612c3155b9144ee6ec013ea00494d",
+    "agent-runtime": "sha256:c06f8988fc131538c1800ee2ba36b3010282aabd8a0d345b5b12aa44d802e8c3",
+    "web": "sha256:4a47964311cfc22d37a7391b19189d10fbfa7ba03c6e2c090f6ea9f6174fce4a"
+  }
+}

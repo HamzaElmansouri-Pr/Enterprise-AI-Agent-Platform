@@ -75,3 +75,5 @@ The `decisions/` directory contains [ADR 0001](decisions/0001-postgresql-tenant-
 - [ADR0012 — Identity ingress and supported Spring](decisions/0012-identity-ingress-and-supported-spring.md)
 
 - [ADR 0013 — Business pilot and product validation](decisions/0013-business-pilot-and-product-validation.md)
+
+- [ADR 0014 — Guided onboarding and tenant discovery](decisions/0014-guided-onboarding-and-tenant-discovery.md)

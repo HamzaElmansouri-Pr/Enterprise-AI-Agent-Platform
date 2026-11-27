@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ApiClient } from "../api/client";
 import type { TenantContext } from "../api/contracts";
 import { TenantApi } from "../api/tenant";
@@ -25,6 +25,7 @@ export function Console({
   onContext,
   client,
   context,
+  workspaceName,
   onSwitch,
   onLogout,
   acknowledged,
@@ -33,6 +34,7 @@ export function Console({
   onContext: (context: TenantContext, client: ApiClient) => void;
   client: ApiClient;
   context: TenantContext;
+  workspaceName?: string;
   onSwitch: () => void;
   onLogout: () => void;
   acknowledged: boolean;
@@ -40,6 +42,9 @@ export function Console({
 }) {
   const [pendingTurns] = useState(() => new Map<string, string>());
   const [page, setPage] = useState("dashboard");
+  useEffect(() => {
+    document.getElementById("workspace-main")?.focus();
+  }, [page]);
   const api = useMemo(
     () => new TenantApi(client, context.tenantId),
     [client, context.tenantId],
@@ -84,9 +89,13 @@ export function Console({
           <div>
             <span className="eyebrow">TENANT WORKSPACE</span>
             <strong>
-              <span className="identifier">{context.tenantId}</span>{" "}
+              <span>{workspaceName ?? "Selected organization"}</span>{" "}
               <span className="role">{context.role}</span>
             </strong>
+            <details>
+              <summary>Support identifier</summary>
+              <span className="identifier">{context.tenantId}</span>
+            </details>
           </div>
           <div className="actions">
             <button onClick={onSwitch}>Switch tenant</button>

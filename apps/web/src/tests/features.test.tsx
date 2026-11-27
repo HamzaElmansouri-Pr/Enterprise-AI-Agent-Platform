@@ -242,6 +242,10 @@ describe("knowledge", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Upload document" }));
     await screen.findByText(/Document accepted/);
+    expect(screen.getByText(/Document accepted/).textContent).not.toContain(
+      "pending",
+    );
+    await screen.findByText("READY");
     const options = calls("/knowledge/documents")[0][1];
     expect(options.body).toBeInstanceOf(FormData);
     expect(options.body.get("agentId")).toBe(agentId);
@@ -590,9 +594,7 @@ it("retrieving an existing run does not attribute an earlier question to it", as
   fireEvent.change(screen.getByLabelText("Run UUID"), {
     target: { value: run.runId },
   });
-  fireEvent.click(
-    screen.getByRole("button", { name: "Retrieve run" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Retrieve run" }));
   await screen.findByText(run.answer!);
   expect(
     screen.queryByRole("heading", { name: "Submitted question" }),

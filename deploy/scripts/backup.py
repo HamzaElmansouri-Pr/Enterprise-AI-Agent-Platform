@@ -181,7 +181,7 @@ def unpack(source, directory):
                 output.write(chunk)
     if (
         manifest.get("format") != FORMAT
-        or manifest.get("schemaVersion") != "8"
+        or manifest.get("schemaVersion") not in ("8", "9")
         or manifest.get("postgresMajor") != 17
         or manifest.get("vectorVersion") != "0.8.7"
         or sha(target) != manifest.get("dumpSha256")
@@ -264,7 +264,7 @@ def create(pilot, certificate, output_dir, temporary="/dev/shm"):
             backupId=backup_id,
             createdAt=manifest["createdAt"],
             postgresMajor=17,
-            schemaVersion="8",
+            schemaVersion=manifest["schemaVersion"],
             vectorVersion="0.8.7",
             bytes=final.stat().st_size,
             sha256=sha(final),
@@ -369,7 +369,7 @@ def restore(pilot, archive, certificate, key, temporary="/dev/shm"):
             )
         finally:
             pilot.compose(["exec", "-T", "postgres", "rm", "-f", target_list])
-        pilot.database_preflight()
+        pilot.database_preflight(expected_schema=manifest["schemaVersion"])
     return {
         "backupId": manifest["backupId"],
         "restore": "completed",

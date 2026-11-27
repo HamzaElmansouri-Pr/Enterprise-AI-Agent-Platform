@@ -11,6 +11,7 @@ type AuthState = {
   session: MemorySession;
   client: ApiClient;
   context?: TenantContext;
+  workspaceName?: string;
   scope: number;
 };
 function App() {
@@ -99,7 +100,13 @@ function App() {
         key={auth.scope}
         api={auth.client}
         onLogout={() => end("Signed out.")}
-        onSelect={(context) => setAuth({ ...auth, context })}
+        onSelect={(context, workspaceName) =>
+          setAuth((current) =>
+            current?.client === auth.client
+              ? { ...current, context, workspaceName }
+              : current,
+          )
+        }
       />
     );
   return (
@@ -108,10 +115,12 @@ function App() {
       onContext={onContext}
       client={auth.client}
       context={auth.context}
+      workspaceName={auth.workspaceName}
       acknowledged={acknowledged}
       onAcknowledge={() => setAcknowledged(true)}
       onLogout={() => end("Signed out.")}
       onSwitch={() => {
+        setAcknowledged(false);
         auth.session.clearScopes();
         const session = auth.session;
         const expired = () => {

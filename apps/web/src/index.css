@@ -368,6 +368,23 @@ main#workspace-main {
   border-radius: 9px;
   background: white;
 }
+.table-wrap:focus-visible {
+  outline: 3px solid var(--muted);
+  outline-offset: 3px;
+}
+.table-hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+.onboarding-steps {
+  padding-inline-start: 24px;
+}
+.onboarding-steps li {
+  padding: 8px 0 14px;
+}
+.onboarding-steps p {
+  max-width: 78ch;
+}
 table {
   width: 100%;
   border-collapse: collapse;

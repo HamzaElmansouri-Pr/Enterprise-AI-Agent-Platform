@@ -1,3 +1,4 @@
+import { TableScroll } from "../../components/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TenantApi } from "../../api/tenant";
 import { ConversationApi } from "../../api/conversations";
@@ -131,7 +132,7 @@ function ConversationList({
       <ErrorNotice error={action.error} />
       <ErrorNotice error={remote.error} />
       {remote.loading && <Loading />}
-      <div className="table-wrap">
+      <TableScroll>
         <table>
           <thead>
             <tr>
@@ -169,7 +170,7 @@ function ConversationList({
             ))}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
       {remote.data && !remote.data.items.length && (
         <Empty>No conversations for this agent.</Empty>
       )}
@@ -465,6 +466,14 @@ function MessageBubble({
         <button disabled={busy} onClick={onRetrieve}>
           Check turn outcome
         </button>
+      )}
+      {message.citations.length > 0 && <h4>Source citations</h4>}
+      {message.citations.length > 0 && (
+        <p>
+          Use the filename and page to check the original authorized document. A
+          citation identifies evidence; it does not guarantee that the answer is
+          correct. Source-file download is not available here.
+        </p>
       )}
       {message.citations.map((c) => (
         <div key={c.chunkId}>

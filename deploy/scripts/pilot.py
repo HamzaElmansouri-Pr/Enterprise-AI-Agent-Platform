@@ -394,7 +394,7 @@ class Pilot:
             ]
         return self.compose(cmd, data=query.encode(), timeout=60).decode().strip()
 
-    def database_preflight(self, empty=False):
+    def database_preflight(self, empty=False, expected_schema="9"):
         query = (ROOT / "deploy/pilot/preflight.sql").read_text()
         data = json.loads(self.sql(query))
         if (
@@ -408,7 +408,7 @@ class Pilot:
         if empty:
             if data["objects"] != 0:
                 raise OperationError("Restore destination is nonempty")
-        elif data["migration"] != "8" or not data["forcedRls"]:
+        elif data["migration"] != expected_schema or not data["forcedRls"]:
             raise OperationError("Database schema or forced RLS preflight failed")
         return data
 

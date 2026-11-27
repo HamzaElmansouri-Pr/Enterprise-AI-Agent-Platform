@@ -28,6 +28,10 @@ const guidance: Record<string, string> = {
     "No usable supporting evidence was available. Check the agent’s READY documents and associations before asking again.",
   EXECUTION_INTERRUPTED:
     "This attempt was interrupted. Inspect its saved outcome before considering a new attempt; no automatic retry will occur.",
+  EXECUTION_FAILED:
+    "This execution failed. Inspect its durable outcome before another attempt; a provider call may have occurred.",
+  TOOL_EXECUTION_FAILED:
+    "The internal task was not confirmed as created. Retrieve the proposal outcome and ask an operator to review it. Do not create a replacement proposal automatically.",
 };
 export function FailureNotice({ code }: { code: string }) {
   const safe = safeFailure(code);

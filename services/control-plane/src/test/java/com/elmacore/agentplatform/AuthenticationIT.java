@@ -78,9 +78,9 @@ class AuthenticationIT {
         // Explicit upgrade from the accepted V1 state, preserving its checksum/history.
         var latest = Flyway.configure().dataSource(DB.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(7);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(8);
         latest.validate();
-        assertThat(latest.info().applied()).hasSize(8);
+        assertThat(latest.info().applied()).hasSize(9);
         registry.add("spring.datasource.url", DB::getJdbcUrl);
         registry.add("spring.datasource.password", () -> RUNTIME);
         registry.add("spring.datasource.hikari.maximum-pool-size", () -> "1");
@@ -113,6 +113,84 @@ class AuthenticationIT {
         }
     }
     @AfterAll static void cleanupKeys() throws Exception { Files.deleteIfExists(PRIVATE); Files.deleteIfExists(PUBLIC); }
+
+    @Test void discoveryListsOnlyCurrentEnabledMembershipsAndIsNotAnAccessGrant() throws Exception {
+        String token = tokens.issue(USER);
+        mvc.perform(get("/api/v1/me/tenants").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items[0].tenantId").value(A.toString()))
+                .andExpect(jsonPath("$.items[0].name").value("A"))
+                .andExpect(jsonPath("$.items[0].role").value("MEMBER"))
+                .andExpect(jsonPath("$.items[0].userId").doesNotExist())
+                .andExpect(jsonPath("$.items[0].email").doesNotExist());
+        try (var connection = admin(); var statement = connection.createStatement()) {
+            statement.execute("DELETE FROM platform.tenant_memberships WHERE user_id='"+USER+"' AND tenant_id='"+A+"'");
+        }
+        mvc.perform(get("/api/v1/me/tenants").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].tenantId").value(B.toString()));
+        context(A, token).andExpect(status().isForbidden());
+        try (var connection = admin(); var statement = connection.createStatement()) {
+            statement.execute("UPDATE platform.users SET enabled=false WHERE id='"+USER+"'");
+        }
+        mvc.perform(get("/api/v1/me/tenants").header("Authorization", "Bearer " + token)).andExpect(status().isUnauthorized());
+    }
+    @Test void discoveryDoesNotLeakAnotherUsersTenantsAndHandlesNoMemberships() throws Exception {
+        try (var connection = admin(); var statement = connection.createStatement()) {
+            statement.execute("UPDATE platform.users SET enabled=true WHERE id='"+DISABLED+"'");
+        }
+        String token = tokens.issue(DISABLED);
+        String body = mvc.perform(get("/api/v1/me/tenants").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].role").value("OWNER")).andReturn().getResponse().getContentAsString();
+        assertThat(body).doesNotContain(B.toString(),"password", "user@example.com");
+        try (var connection = admin(); var statement = connection.createStatement()) {
+            statement.execute("DELETE FROM platform.tenant_memberships WHERE user_id='"+DISABLED+"'");
+        }
+        mvc.perform(get("/api/v1/me/tenants").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty()).andExpect(jsonPath("$.hasNext").value(false));
+    }
+    @Test void discoveryPaginationRejectsAuthorityOverridesAndBoundsWork() throws Exception {
+        mvc.perform(get("/api/v1/me/tenants")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/me/tenants").header("Authorization", "Bearer invalid")).andExpect(status().isUnauthorized());
+        String token = tokens.issue(USER);
+        for (String query : new String[]{"?userId="+DISABLED,"?tenantId="+B,"?size=101","?page=-1","?size=1&size=2","?page=2147483647"}) {
+            mvc.perform(get("/api/v1/me/tenants"+query).header("Authorization", "Bearer "+token)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(get("/api/v1/me/tenants?size=1").header("Authorization", "Bearer "+token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1)).andExpect(jsonPath("$.hasNext").value(true));
+        mvc.perform(get("/api/v1/me/tenants?size=1&page=1").header("Authorization", "Bearer "+token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].tenantId").value(B.toString())).andExpect(jsonPath("$.hasNext").value(false));
+    }
+    @Test void discoveryCapabilityPreservesForcedRlsAndConnectionContextWithoutIdentityGrants() throws Exception {
+        try (var connection = source.getConnection(); var statement = connection.createStatement()) {
+            for (String table : new String[]{"users", "tenant_memberships"}) {
+                assertThatThrownBy(() -> statement.executeQuery("SELECT * FROM platform."+table)).isInstanceOf(SQLException.class)
+                        .satisfies(error -> assertThat(((SQLException)error).getSQLState()).isEqualTo("42501"));
+            }
+            connection.setAutoCommit(false);
+            statement.execute("SELECT set_config('app.discovery_user_id','sentinel',true)");
+            try (var query = connection.prepareStatement("SELECT * FROM platform.discover_tenants(?,21,0)")) {
+                query.setObject(1,USER);
+                try (var rows = query.executeQuery()) { int count=0; while(rows.next()) count++; assertThat(count).isEqualTo(2); }
+            }
+            try (var rows = statement.executeQuery("SELECT current_setting('app.discovery_user_id'), platform.current_tenant_id(), (SELECT count(*) FROM platform.tenants)")) {
+                rows.next(); assertThat(rows.getString(1)).isEqualTo("sentinel"); assertThat(rows.getObject(2)).isNull(); assertThat(rows.getInt(3)).isZero();
+            }
+            connection.rollback(); connection.setAutoCommit(true);
+            for (String args : new String[]{"NULL,21,0", "'"+USER+"',102,0", "'"+USER+"',21,10001"}) {
+                assertThatThrownBy(() -> statement.execute("SELECT * FROM platform.discover_tenants("+args+")"))
+                        .isInstanceOf(SQLException.class).satisfies(error -> assertThat(((SQLException)error).getSQLState()).isEqualTo("22023"));
+            }
+            try (var rows = statement.executeQuery("SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE oid='platform.tenants'::regclass")) {
+                rows.next(); assertThat(rows.getBoolean(1)).isTrue();
+            }
+            try (var rows = statement.executeQuery("SELECT count(*) FROM platform.discover_tenants('"+DISABLED+"',21,0)")) {
+                rows.next(); assertThat(rows.getInt(1)).isZero();
+            }
+        }
+    }
 
     @Test void correctCredentialsIssueMinimalSignedFifteenMinuteToken() throws Exception {
         var result = login(" USER@EXAMPLE.COM ", PASSWORD).andExpect(status().isOk())

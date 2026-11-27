@@ -143,6 +143,26 @@ describe("team management", () => {
     expect(screen.queryByLabelText("One-time invitation token")).toBeNull();
     expect(set).not.toHaveBeenCalled();
   });
+  it("refreshes accepted-invitation state on return with a bounded focus interval", async () => {
+    invitations = [invitation];
+    render(<Team api={api} onContext={() => {}} />);
+    await screen.findByText("PENDING");
+    const invitationReads = () =>
+      fetcher.mock.calls.filter(([path]) => path.includes("/invitations?"))
+        .length;
+    const before = invitationReads();
+    invitations = [];
+    const clock = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 6000);
+    try {
+      fireEvent.focus(window);
+      await screen.findByText("No invitations on this page.");
+      expect(invitationReads()).toBe(before + 1);
+      fireEvent.focus(window);
+      expect(invitationReads()).toBe(before + 1);
+    } finally {
+      clock.mockRestore();
+    }
+  });
   it("cancellation requires confirmation and does not expose another token", async () => {
     invitations = [invitation];
     render(<Team api={api} onContext={() => {}} />);
@@ -350,7 +370,7 @@ describe("invitation acceptance forms", () => {
     fireEvent.click(screen.getByRole("button", { name: "Accept invitation" }));
     await screen.findByRole("heading", { name: "Welcome back" });
     expect(
-      screen.queryByRole("heading", { name: "Select your tenant" }),
+      screen.queryByRole("heading", { name: "Choose your organization" }),
     ).toBeNull();
     expect(calls("/accept-new")[0][1].headers.Authorization).toBeUndefined();
   });

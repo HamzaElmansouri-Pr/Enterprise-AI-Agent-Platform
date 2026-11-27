@@ -1,6 +1,6 @@
 # Backup and disaster recovery
 
-Scope: PostgreSQL 17, pgvector 0.8.7, Flyway V8, reviewed EAAP-012 pilot images. [ADR 0011](../architecture/decisions/0011-operational-security-and-recovery.md) explains the encryption/ownership model. These commands never target development Compose. Restore is an administrative action for trusted archives, not an API capability.
+Scope: PostgreSQL 17, pgvector 0.8.7, Flyway V9 with reviewed V8 archive compatibility. [ADR 0011](../architecture/decisions/0011-operational-security-and-recovery.md) explains the encryption/ownership model. These commands never target development Compose. Restore is an administrative action for trusted archives, not an API capability.
 
 ## Key custody and backup
 
@@ -55,3 +55,16 @@ There is no WAL/PITR or replication. RPO equals time since the last independentl
 ## EAAP-013 framework compatibility rehearsal
 
 Boot4.2.0 uses the unchanged Flyway V1–V8 schema and the same PostgreSQL17/pgvector0.8.7 archive format. No V9 or development database migration is needed. The updated acceptance drill adds actual identity-ingress network checks before taking the snapshot, then runs the existing encrypted export, negative archive tests, independent-cluster restore, exact table comparison, migration validation, RLS and restored business replay. See [EAAP-013 evidence](../tasks/EAAP-013.md). Measurements are synthetic local observations, not guaranteed recovery objectives. Preserve existing accepted archives; use fresh configs, image locks and empty restore clusters for rehearsal.
+
+## EAAP-015 schema compatibility
+
+Current startup requires V9. Archive validation accepts exactly reviewed V8/V9
+manifests and reports their actual version. Restore checks that version with
+applications stopped; a V8 archive must then be explicitly migrated to V9 before
+current preflight/start. Never edit archived Flyway history or earlier SQL.
+The independent rehearsal also verifies restored discovery returns only the
+current user's tenant and runtime still cannot SELECT identity tables. It never
+migrates development/customer data. See [EAAP-015](../tasks/EAAP-015.md).
+Restoring old data can resurrect approved post-snapshot revocations/erasures;
+reconcile under operator approval before reopening ingress. No deletion ledger
+or automatic reconciliation is implemented.

@@ -48,6 +48,11 @@ export function AgentSelect({
         </select>
       </Field>
       <ErrorNotice error={remote.error} />
+      {!!remote.error && (
+        <button type="button" onClick={remote.refresh}>
+          Refresh agents
+        </button>
+      )}
       {remote.data && (page > 0 || remote.data.hasNext) && (
         <Pager page={page} hasNext={remote.data.hasNext} onChange={setPage} />
       )}

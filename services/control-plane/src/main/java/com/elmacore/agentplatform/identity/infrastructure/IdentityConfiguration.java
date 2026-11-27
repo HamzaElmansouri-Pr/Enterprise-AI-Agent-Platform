@@ -6,6 +6,8 @@ import com.elmacore.agentplatform.identity.application.Login;
 import com.elmacore.agentplatform.identity.application.TenantRegistry;
 import com.elmacore.agentplatform.identity.application.TenantContext;
 import com.elmacore.agentplatform.identity.application.MembershipAuthorization;
+import com.elmacore.agentplatform.identity.application.TenantDirectory;
+import com.elmacore.agentplatform.identity.application.TenantDiscovery;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,12 @@ import javax.sql.DataSource;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class IdentityConfiguration {
+    @Bean TenantDirectory tenantDirectory(JdbcTemplate jdbc) {
+        return new JdbcTenantDirectory(jdbc);
+    }
+    @Bean TenantDiscovery tenantDiscovery(IdentityStore identities, TenantDirectory directory) {
+        return new TenantDiscovery(identities, directory);
+    }
     @Bean IdentityStore identities(JdbcTemplate jdbc) { return new JdbcIdentityStore(jdbc); }
     @Bean Passwords passwords() { return new ArgonPasswords(); }
     @Bean JwtTokens tokens(Environment environment, ResourceLoader resources) { return new JwtTokens(environment, resources); }

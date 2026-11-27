@@ -38,4 +38,23 @@ describe("business failure recovery guidance", () => {
       "Failure: Unavailable",
     );
   });
+  it("does not claim a failed internal action created a task", () => {
+    render(<FailureNotice code="TOOL_EXECUTION_FAILED" />);
+    expect(screen.getByRole("alert").textContent).toContain(
+      "not confirmed as created",
+    );
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Retrieve the proposal outcome",
+    );
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Do not create a replacement proposal automatically",
+    );
+  });
+  it("preserves billing uncertainty for a failed execution", () => {
+    render(<FailureNotice code="EXECUTION_FAILED" />);
+    expect(screen.getByRole("alert").textContent).toContain("durable outcome");
+    expect(screen.getByRole("alert").textContent).toContain(
+      "provider call may have occurred",
+    );
+  });
 });

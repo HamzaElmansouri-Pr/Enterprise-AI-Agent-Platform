@@ -94,6 +94,26 @@ export function Loading() {
     </p>
   );
 }
+export function TableScroll({ children }: { children: ReactNode }) {
+  const hint = useId();
+  return (
+    <>
+      <p id={hint} className="table-hint">
+        On a narrow screen, scroll this table sideways to reach all columns and
+        actions. Keyboard: focus the table area and use the arrow keys.
+      </p>
+      <div
+        className="table-wrap"
+        role="region"
+        aria-label="Scrollable records"
+        aria-describedby={hint}
+        tabIndex={0}
+      >
+        {children}
+      </div>
+    </>
+  );
+}
 export function Confirm({
   title,
   children,

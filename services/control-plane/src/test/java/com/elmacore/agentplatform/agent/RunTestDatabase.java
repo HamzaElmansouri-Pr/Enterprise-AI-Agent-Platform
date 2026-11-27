@@ -53,10 +53,10 @@ final class RunTestDatabase {
         assertThat(v2.migrate().migrationsExecuted).isEqualTo(4);
         var latest = Flyway.configure().dataSource(database.getJdbcUrl(), "eaap_migration", MIGRATION)
                 .schemas("platform").defaultSchema("platform").createSchemas(false).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(4);
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(5);
         latest.validate();
         assertThat(latest.migrate().migrationsExecuted).isZero();
-        assertThat(latest.info().applied()).hasSize(8);
+        assertThat(latest.info().applied()).hasSize(9);
         properties.add("spring.datasource.url", database::getJdbcUrl);
         properties.add("spring.datasource.password", () -> RUNTIME);
         properties.add("spring.datasource.hikari.maximum-pool-size", () -> "2");
